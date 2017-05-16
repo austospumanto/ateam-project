@@ -1,0 +1,6 @@
+model_checkpoint_path: "updated_saved_model_-50"
+all_model_checkpoint_paths: "updated_saved_model_-10"
+all_model_checkpoint_paths: "updated_saved_model_-20"
+all_model_checkpoint_paths: "updated_saved_model_-30"
+all_model_checkpoint_paths: "updated_saved_model_-40"
+all_model_checkpoint_paths: "updated_saved_model_-50"
