@@ -1,5 +1,8 @@
+fire==0.1.0
 flake8==3.3.0
 gym==0.9.1
 matplotlib==2.0.2
 numpy==1.12.1
+scipy==0.19.0
 tensorflow==1.1.0
+tqdm==4.11.2
