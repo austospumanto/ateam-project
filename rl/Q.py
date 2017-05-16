@@ -11,9 +11,11 @@ from speech import digits
 from envs import envs
 
 
-def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
+def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999,
+              episode_scores=None):
     """
-        Learn state-action values using the Q-learning algorithm with epsilon-greedy exploration strategy.
+        Learn state-action values using the Q-learning algorithm with epsilon-greedy exploration
+        strategy.
         Update Q at the end of every episode.
 
         Parameters
@@ -37,7 +39,6 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
         np.array
             An array of shape [env.nS x env.nA] representing state, action values
     """
-
     Q = np.zeros((env.nS, env.nA))
     for episode_idx in tqdm.tqdm(range(num_episodes)):
         # Choose a random starting state
@@ -70,7 +71,8 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
 
         # Update Q after episode ends
         for cur_state, action, reward, next_state in sars:
-            # Get optimal value of next state (i.e. assume we act greedily from the next state onwards)
+            # Get optimal value of next state (i.e. assume we act greedily from the next state
+            # onwards)
             V_opt_ns = np.max(Q[next_state])
 
             # Calculate Q_samp_sa (i.e. "What was Q[s][a] for this particular sample/event")
@@ -129,7 +131,8 @@ def qlearning__pretrained_asr(env_asr, digit_recognizer, num_episodes=15000, gam
 
         # Update Q after episode ends
         for cur_state, action, reward, next_state in sars:
-            # Get optimal value of next state (i.e. assume we act greedily from the next state onwards)
+            # Get optimal value of next state (i.e. assume we act greedily from the next state
+            # onwards)
             V_opt_ns = np.max(Q[next_state])
 
             # Calculate Q_samp_sa (i.e. "What was Q[s][a] for this particular sample/event")
@@ -158,7 +161,8 @@ def _choose_egreedy_action(env, s, Q, e):
     be_greedy = bool((1.0 - e) > random.random())
     if be_greedy:
         # If greedy, randomly choose from among the best actions
-        a = np.argmax(Q[s])  # random.choice([a for a, q_val in enumerate(Q[s]) if q_val == np.max(Q[s])])
+        a = np.argmax(Q[s])
+        # random.choice([a for a, q_val in enumerate(Q[s]) if q_val == np.max(Q[s])])
     else:
         a = random.randint(0, env.nA - 1)
     return a
