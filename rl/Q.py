@@ -112,7 +112,7 @@ def qlearning__pretrained_asr(env_asr, digit_recognizer, num_episodes=15000, gam
             # Translate the auditory features of the next state to the state's index via ASR
             next_state = int(digit_recognizer.recognize(next_state_features))
 
-            # ???: Should we hard-code the Goal state as being state 15? Should it know what
+            # TODO: Should we hard-code the Goal state as being state 15? Should it know what
             #      state it was in at the time of episode termination?
 
             sars.append((cur_state, action, reward, next_state))
