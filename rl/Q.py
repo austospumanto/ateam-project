@@ -1,12 +1,17 @@
-import tqdm
-import gym
-import numpy as np
 import random
 import time
-from lake_envs import *
+import gym
+import numpy as np
+import tqdm
+
+# This registers the various FrozenLake maps by ID with Gym
+from envs.lake_envs import *
+
+from speech import digits
+from envs import envs
 
 
-def learn_Q_QLearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
+def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
     """
         Learn state-action values using the Q-learning algorithm with epsilon-greedy exploration strategy.
         Update Q at the end of every episode.
@@ -33,7 +38,6 @@ def learn_Q_QLearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay
             An array of shape [env.nS x env.nA] representing state, action values
     """
 
-    ############################
     Q = np.zeros((env.nS, env.nA))
     for episode_idx in tqdm.tqdm(range(num_episodes)):
         # Choose a random starting state
@@ -79,7 +83,65 @@ def learn_Q_QLearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay
         e *= decay_rate
 
     return Q
-    ############################
+
+
+def qlearning__pretrained_asr(env_asr, digit_recognizer, num_episodes=15000, gamma=0.98,
+                              lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
+    Q = np.zeros((env_asr.nS, env_asr.nA))
+    for episode_idx in tqdm.tqdm(range(num_episodes)):
+        # Choose a random starting state
+        cur_state = env_asr.reset()
+
+        # Data structure for storing (s, a, r, s') tuples and
+        sars = []
+
+        # Data structure for
+
+        # Start the episode. The episode ends when we reach a terminal state (i.e. "done is True")
+        done = False
+        episode_reward = 0.0
+        while not done:
+            # Choose an action "epsilon-greedily" (where epsilon is the var "e")
+            action = _choose_egreedy_action(env_asr, cur_state, Q, e)
+
+            # Use env's transition probs to "choose" next state
+            # NOTE: We throw away the first return val (next_state) and last return val (info)
+            #       because using these would be cheating
+            _, next_state_features, reward, done, _ = env_asr.step(action)
+
+            # Translate the auditory features of the next state to the state's index via ASR
+            next_state = int(digit_recognizer.recognize(next_state_features))
+
+            # ???: Should we hard-code the Goal state as being state 15? Should it know what
+            #      state it was in at the time of episode termination?
+
+            sars.append((cur_state, action, reward, next_state))
+
+            # Move to the next state
+            cur_state = next_state
+
+            episode_reward += reward
+
+        # If we're running this as part of 5c, then record the scores
+        if episode_scores is not None:
+            # NOTE: Here I am simply recording 0 or 1 (the undiscounted score)
+            episode_scores[episode_idx] = episode_reward
+
+        # Update Q after episode ends
+        for cur_state, action, reward, next_state in sars:
+            # Get optimal value of next state (i.e. assume we act greedily from the next state onwards)
+            V_opt_ns = np.max(Q[next_state])
+
+            # Calculate Q_samp_sa (i.e. "What was Q[s][a] for this particular sample/event")
+            Q_samp_sa = reward + gamma * V_opt_ns
+
+            # Update our overall estimate of Q[s][a]
+            Q[cur_state][action] = (1 - lr) * Q[cur_state][action] + lr * Q_samp_sa
+
+        # Decay the randomness of our action selection (i.e. increase greediness)
+        e *= decay_rate
+
+    return Q
 
 
 def _choose_egreedy_action(env, s, Q, e):
@@ -103,7 +165,7 @@ def _choose_egreedy_action(env, s, Q, e):
 
 
 # Functions for testing
-def render_single_Q(env, Q):
+def render_single_q(env, Q):
     """
         Renders Q function once on environment. Watch your agent play!
 
@@ -129,7 +191,7 @@ def render_single_Q(env, Q):
     print "Episode reward: %f" % episode_reward
 
 
-def _run_trial_Q(env, Q):
+def _run_trial_q(env, Q):
     """
         Runs Q function once on environment and returns the reward.
 
@@ -154,13 +216,21 @@ def _run_trial_Q(env, Q):
 def print_avg_score(env, Q):
     # Average episode rewards over trials
     num_trials = 100
-    episode_rewards = [_run_trial_Q(env, Q) for _ in range(num_trials)]
+    episode_rewards = [_run_trial_q(env, Q) for _ in range(num_trials)]
     avg_reward = np.average(episode_rewards)
     print 'Averge episode score/reward: %.3f' % avg_reward
 
 
-def main():
+def vanilla__example():
     env = gym.make('Stochastic-4x4-FrozenLake-v0')
-    Q = learn_Q_QLearning(env)
+    Q = qlearning(env)
     print_avg_score(env, Q)
-    render_single_Q(env, Q)
+    render_single_q(env, Q)
+
+
+def pretrained_asr__example():
+    env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'))
+    digit_recognizer = digits.DigitRecognizer()
+    Q = qlearning__pretrained_asr(env_asr, digit_recognizer)
+    print_avg_score(env_asr, Q)
+    render_single_q(env_asr, Q)

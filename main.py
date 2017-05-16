@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import fire
-import Q
+
+from rl import Q
 
 
 class Ateam(object):
-    def q_example(self):
-        Q.main()
+    def vanilla_example(self):
+        Q.vanilla_example()
 
 
 if __name__ == '__main__':
