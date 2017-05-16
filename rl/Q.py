@@ -2,12 +2,14 @@ import random
 import time
 import gym
 import numpy as np
+import tensorflow as tf
 import tqdm
 
 # This registers the various FrozenLake maps by ID with Gym
 from envs.lake_envs import *
 
 from speech import digits
+from speech.model import CTCModel
 from envs import envs
 
 
@@ -87,7 +89,7 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
     return Q
 
 
-def qlearning_pretrained_asr(env_asr, digit_recognizer, num_episodes=15000, gamma=0.98,
+def qlearning_pretrained_asr(env_asr, digit_recognizer, model, sess, num_episodes=15000, gamma=0.98,
                              lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
     Q = np.zeros((env_asr.nS, env_asr.nA))
     for episode_idx in tqdm.tqdm(range(num_episodes)):
@@ -112,7 +114,7 @@ def qlearning_pretrained_asr(env_asr, digit_recognizer, num_episodes=15000, gamm
             _, next_state_features, reward, done, _ = env_asr.step(action)
 
             # Translate the auditory features of the next state to the state's index via ASR
-            next_state = int(digit_recognizer.recognize(next_state_features))
+            next_state = int(digit_recognizer.recognize(next_state_features, model, sess))
 
             # TODO: Should we hard-code the Goal state as being state 15? Should it know what
             #      state it was in at the time of episode termination?
@@ -236,6 +238,16 @@ def pretrained_asr_example():
     digit_recognizer = digits.DigitsRecognizer()
     digits_speaker = digits.DigitsSpeaker()
     env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'), digits_speaker)
-    Q = qlearning_pretrained_asr(env_asr, digit_recognizer)
+
+    with tf.Session() as sess:
+        model = CTCModel()
+        ckpt = tf.train.get_checkpoint_state("cs224s/viggy_assign3/saved_models")
+        v2_path = ckpt.model_checkpoint_path + ".index" if ckpt else ""
+
+        if ckpt and (tf.gfile.Exists(ckpt.model_checkpoint_path) or tf.gfile.Exists(v2_path)):
+            model.saver.restore(sess, ckpt.model_checkpoint_path)
+            print "Restored save properly."
+        Q = qlearning_pretrained_asr(env_asr, digit_recognizer, model, sess)
+
     print_avg_score(env_asr, Q)
     render_single_q(env_asr, Q)
