@@ -25,12 +25,12 @@ def sparse_tuple_from(sequences, dtype=np.int32):
     values = []
 
     for n, seq in enumerate(sequences):
-        indices.extend(zip([n]*len(seq), range(len(seq))))
+        indices.extend(zip([n] * len(seq), range(len(seq))))
         values.extend(seq)
 
     indices = np.asarray(indices, dtype=np.int64)
     values = np.asarray(values, dtype=dtype)
-    shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1]+1], dtype=np.int64)
+    shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1] + 1], dtype=np.int64)
 
     return indices, values, shape
 
@@ -96,10 +96,10 @@ def pad_sequences(sequences, maxlen=None, dtype=np.float32,
 
 
 def get_tidigits_to_index_mapping():
-	return {"z": 0, "o": 10, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "_": 11}
+    return {"z": 0, "o": 10, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "_": 11}
 
 def compare_predicted_to_true(preds, trues_tup):
-    inv_index_mapping = {v: k for k, v in get_tidigits_to_index_mapping().items()}        
+    inv_index_mapping = {v: k for k, v in get_tidigits_to_index_mapping().items()}
 
     preds = tf.sparse_tensor_to_dense(preds, default_value=-1).eval()
     trues = tf.sparse_tensor_to_dense(tf.SparseTensor(indices=trues_tup[0], values=trues_tup[1], dense_shape=trues_tup[2]), default_value=-1).eval()
@@ -109,11 +109,11 @@ def compare_predicted_to_true(preds, trues_tup):
         true_label = "".join([inv_index_mapping[ch] for ch in true if ch != -1])
 
         print("Predicted: {}\n   Actual: {}\n".format(predicted_label, true_label))
-        
+
 def load_dataset(dataset_path):
-	with open(dataset_path, 'rb') as f:
-		dataset = pickle.load(f)
-	return dataset
+    with open(dataset_path, 'rb') as f:
+        dataset = pickle.load(f)
+    return dataset
 
 def make_batches(dataset, batch_size=16):
     examples = []

@@ -87,8 +87,8 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
     return Q
 
 
-def qlearning__pretrained_asr(env_asr, digit_recognizer, num_episodes=15000, gamma=0.98,
-                              lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
+def qlearning_pretrained_asr(env_asr, digit_recognizer, num_episodes=15000, gamma=0.98,
+                             lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
     Q = np.zeros((env_asr.nS, env_asr.nA))
     for episode_idx in tqdm.tqdm(range(num_episodes)):
         # Choose a random starting state
@@ -225,16 +225,17 @@ def print_avg_score(env, Q):
     print 'Averge episode score/reward: %.3f' % avg_reward
 
 
-def vanilla__example():
+def vanilla_example():
     env = gym.make('Stochastic-4x4-FrozenLake-v0')
     Q = qlearning(env)
     print_avg_score(env, Q)
     render_single_q(env, Q)
 
 
-def pretrained_asr__example():
-    env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'))
-    digit_recognizer = digits.DigitRecognizer()
-    Q = qlearning__pretrained_asr(env_asr, digit_recognizer)
+def pretrained_asr_example():
+    digit_recognizer = digits.DigitsRecognizer()
+    digits_speaker = digits.DigitsSpeaker()
+    env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'), digits_speaker)
+    Q = qlearning_pretrained_asr(env_asr, digit_recognizer)
     print_avg_score(env_asr, Q)
     render_single_q(env_asr, Q)

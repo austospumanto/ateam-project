@@ -30,7 +30,7 @@ class Config:
     num_final_features = num_mfcc_features * (2 * context_size + 1)
 
     batch_size = 16
-    num_classes = 12 # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
+    num_classes = 12   # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
     num_hidden = 128
 
     num_epochs = 50
@@ -181,7 +181,7 @@ class CTCModel():
             name = variable.name
             shape = variable.get_shape().as_list()
             # Avoid biases in L2 loss
-            if shape != [Config.num_classes] and not "biases" in name:
+            if shape != [Config.num_classes] and "biases" not in name:
                 l2_cost += tf.nn.l2_loss(variable)
         ### END YOUR CODE
 
@@ -262,7 +262,7 @@ class CTCModel():
         feed = self.create_feed_dict(train_inputs_batch, train_targets_batch, train_seq_len_batch)
         batch_cost, wer, batch_num_valid_ex, summary = session.run([self.loss, self.wer, self.num_valid_examples, self.merged_summary_op], feed)
 
-        if math.isnan(batch_cost): # basically all examples in this batch have been skipped
+        if math.isnan(batch_cost):  # basically all examples in this batch have been skipped
             return 0
         if train:
             _ = session.run([self.optimizer], feed)
@@ -318,7 +318,7 @@ if __name__ == "__main__":
             # Initializate the weights and biases
             session.run(init)
             if args.load_from_file is not None:
-                new_saver = tf.train.import_meta_graph('%s.meta'%args.load_from_file, clear_devices=True)
+                new_saver = tf.train.import_meta_graph('%s.meta' % args.load_from_file, clear_devices=True)
                 new_saver.restore(session, args.load_from_file)
 
             train_writer = tf.summary.FileWriter(logs_path + '/train', session.graph)
@@ -331,7 +331,7 @@ if __name__ == "__main__":
                 total_train_cost = total_train_wer = 0
                 start = time.time()
 
-                for batch in random.sample(range(num_batches_per_epoch),num_batches_per_epoch):
+                for batch in random.sample(range(num_batches_per_epoch), num_batches_per_epoch):
                     cur_batch_size = len(train_seqlens_minibatches[batch])
 
                     batch_cost, batch_ler, summary = model.train_on_batch(session, train_feature_minibatches[batch], train_labels_minibatches[batch], train_seqlens_minibatches[batch], train=True)
@@ -348,11 +348,14 @@ if __name__ == "__main__":
                 val_batch_cost, val_batch_ler, _ = model.train_on_batch(session, val_feature_minibatches[0], val_labels_minibatches[0], val_seqlens_minibatches[0], train=False)
 
                 log = "Epoch {}/{}, train_cost = {:.3f}, train_ed = {:.3f}, val_cost = {:.3f}, val_ed = {:.3f}, time = {:.3f}"
-                print(log.format(curr_epoch+1, Config.num_epochs, train_cost, train_wer, val_batch_cost, val_batch_ler, time.time() - start))
+                print(log.format(curr_epoch + 1, Config.num_epochs, train_cost, train_wer,
+                      val_batch_cost, val_batch_ler, time.time() - start))
 
                 if args.print_every is not None and (curr_epoch + 1) % args.print_every == 0:
                     batch_ii = 0
-                    model.print_results(train_feature_minibatches[batch_ii], train_labels_minibatches[batch_ii], train_seqlens_minibatches[batch_ii])
+                    model.print_results(train_feature_minibatches[batch_ii],
+                                        train_labels_minibatches[batch_ii],
+                                        train_seqlens_minibatches[batch_ii])
 
                 if args.save_every is not None and args.save_to_file is not None and (curr_epoch + 1) % args.save_every == 0:
                     saver.save(session, args.save_to_file, global_step=curr_epoch + 1)
