@@ -1,11 +1,10 @@
 import os
 import sqlite3
 
-TIDIGITS_PATH = 'LDC93S10_TIDIGITS/%s/tidigits'
-CDS = ['CD4_1_1', 'CD4_2_1', 'CD4_3_1']
+from tidigits import TIDIGITS_PATH, CDS, DB_NAME
 
 def process_data(sequence_len=2):
-    conn = sqlite3.connect('data.db')
+    conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     # Create table
     c.execute('create table tidigits (\

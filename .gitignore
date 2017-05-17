@@ -4,7 +4,7 @@
 .vscode/
 *.pyc
 data/LDC93S10_TIDIGITS/*
-data/data.db
+data/tidigits.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

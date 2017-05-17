@@ -1,8 +1,11 @@
-from speech.model import CTCModel
+import librosa
 import tensorflow as tf
 
+from speech.model import CTCModel
+from data.tidigits import get_audio_file_path
+
 class DigitsRecognizer(object):
-    # TODO Do
+    # TODO: Do
     def recognize(self, features, model, sess, raw=False):
         """
         Translates MFCC features/raw audio of spoken digits to a string of the digits. ASR
@@ -26,4 +29,7 @@ class DigitsSpeaker(object):
         :param raw: If False, we are using MFCC features.
         :return:
         """
-        pass
+        y, sr = librosa.load(get_audio_file_path(state))
+        if raw:
+            return y
+        return librosa.mfcc(y, sr, n_mfcc=13)
