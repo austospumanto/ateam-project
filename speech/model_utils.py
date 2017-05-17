@@ -34,6 +34,18 @@ def sparse_tuple_from(sequences, dtype=np.int32):
 
     return indices, values, shape
 
+def label_from_sparse_tensor(sparse_tensor):
+    inv_index_mapping = {v: k for k, v in get_tidigits_to_index_mapping().items()}
+
+    dense_tensor = tf.sparse_tensor_to_dense(sparse_tensor, default_value=-1).eval()
+    # print (dense_tensor)
+    label = "".join([inv_index_mapping[ch] for ch in dense_tensor if ch != -1])
+
+    label = label.replace('z', '0')
+    label = label.replace('_', '')
+    label = label.replace('o', '10')
+    return label
+
 def pad_sequences(sequences, maxlen=None, dtype=np.float32,
                   padding='post', truncating='post', value=0.):
     '''Pads each sequence to the same length: the length of the longest

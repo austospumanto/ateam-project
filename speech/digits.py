@@ -1,7 +1,9 @@
 import librosa
+import numpy as np
 import tensorflow as tf
 
 from speech.model import CTCModel
+from speech.model_utils import label_from_sparse_tensor
 from data.tidigits import get_audio_file_path
 
 class DigitsRecognizer(object):
@@ -14,9 +16,10 @@ class DigitsRecognizer(object):
         :param raw: If False, we are using MFCC features.
         :return: digit
         """
-        input_feed = model.create_feed_dict(features, 2)  # Hard-coding sequence length as 2
-        digits = sess.run(model.decoded_sequence, input_feed)
-        return digits
+        input_feed = model.create_feed_dict(np.expand_dims(np.transpose(features), axis=0), np.array([2]))  # Hard-coding sequence length as 2
+        digits = label_from_sparse_tensor(sess.run(model.decoded_sequence, input_feed))
+        print digits
+        return int(digits)
 
 
 class DigitsSpeaker(object):
@@ -32,4 +35,4 @@ class DigitsSpeaker(object):
         y, sr = librosa.load(get_audio_file_path(state))
         if raw:
             return y
-        return librosa.mfcc(y, sr, n_mfcc=13)
+        return librosa.feature.mfcc(y, sr, n_mfcc=13)

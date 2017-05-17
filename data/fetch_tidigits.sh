@@ -8,4 +8,4 @@ echo "Type in your SUNet ID (e.g. 'viggy'), followed by [Enter]:"
 
 read sunetid
 
-scp -r $sunetid@corn.stanford.edu:/afs/ir.stanford.edu/data/linguistic-data/ldc/LDC93S10_TIDIGITS .
+scp -r $sunetid@corn.stanford.edu:/afs/ir.stanford.edu/data/linguistic-data/ldc/LDC93S10_TIDIGITS data/
