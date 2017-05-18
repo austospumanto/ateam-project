@@ -14,7 +14,7 @@ import tensorflow as tf
 import numpy as np
 from six.moves import xrange as range
 
-from utils import *
+from model_utils import *
 import pdb
 from time import gmtime, strftime
 
@@ -34,8 +34,8 @@ class Config:
     num_hidden = 128
 
     num_epochs = 50
-    l2_lambda = 0.0000001
-    lr = 1e-4
+    l2_lambda = 0.000000001
+    lr = 1e-3
 
 class CTCModel():
     """

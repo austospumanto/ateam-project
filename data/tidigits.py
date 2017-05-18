@@ -5,8 +5,6 @@ import sqlite3
 import python_speech_features as psf
 import scikits.audiolab
 
-from speech.model_utils import get_tidigits_to_index_mapping
-
 DB_NAME = 'data/tidigits.db'
 TIDIGITS_PATH = 'data/LDC93S10_TIDIGITS/%s/tidigits'
 CDS = ['CD4_1_1', 'CD4_2_1', 'CD4_3_1']
@@ -28,6 +26,9 @@ def get_audio_file_path(desired_digits, desired_length=2):
     print choice
     return choice['path']
 
+def get_tidigits_to_index_mapping():
+    return {"z": 0, "o": 10, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "_": 11}
+
 def dump_data():
     train_examples = []
     train_sequences = []
@@ -35,7 +36,6 @@ def dump_data():
     test_examples = []
     test_sequences = []
     test_seqlens = []
-    index_mapping = get_tidigits_to_index_mapping()
     c = conn.cursor()
     c.execute('select path, digits from tidigits where digits like ? or digits like ?;', ('z%', '1%'))
     rows = c.fetchall()
@@ -54,16 +54,18 @@ def dump_data():
         test_seqlens.append(seq_len)
     train_dataset = (train_examples, train_sequences, train_seqlens)
     test_dataset = (test_examples, test_sequences, test_seqlens)
-    pickle.dump(train_dataset, 'data/train.dat')
-    pickle.dump(test, 'data/test.dat')
+    pickle.dump(train_dataset, open('data/train.dat', 'wb'))
+    pickle.dump(test_dataset, open('data/test.dat', 'wb'))
 
 def get_mfcc_data(path, digits):
+    index_mapping = get_tidigits_to_index_mapping()
     f = scikits.audiolab.Sndfile(path, 'r')
     signal = f.read_frames(f.nframes)
     example = psf.mfcc(signal)
     sequence = [index_mapping[ch] for ch in digits]
     seq_len = example.shape[0]
     return example, sequence, seq_len
+
 
 if __name__ == "__main__":
     dump_data()
