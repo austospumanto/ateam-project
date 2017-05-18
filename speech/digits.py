@@ -22,7 +22,6 @@ class DigitsRecognizer(object):
         """
         seq_len = np.array([features.shape[0]])
         input_features = np.expand_dims(features, axis=0)
-        print input_features.shape
         input_feed = self._model.create_feed_dict(input_features, seq_len)  # Hard-coding sequence length as 2
         digits = label_from_sparse_tensor(
             self._sess.run(self._model.decoded_sequence, input_feed)

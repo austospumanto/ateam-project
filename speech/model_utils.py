@@ -32,14 +32,11 @@ def sparse_tuple_from(sequences, dtype=np.int32):
 
 def label_from_sparse_tensor(sparse_tensor):
     inv_index_mapping = {v: k for k, v in get_tidigits_to_index_mapping().items()}
-
     dense_tensor = tf.sparse_tensor_to_dense(sparse_tensor, default_value=-1).eval()
-    # print (dense_tensor)
     label = "".join([inv_index_mapping[ch] for ch in dense_tensor[0] if ch != -1])
-
     label = label.replace('z', '0')
     label = label.replace('_', '')
-    label = label.replace('o', '10')
+    label = label.replace('o', '0')
     return label
 
 
