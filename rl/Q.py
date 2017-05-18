@@ -172,7 +172,7 @@ def _choose_egreedy_action(env, s, Q, e):
 
 
 # Functions for testing
-def render_single_q(env, Q, state_recognizer=None):
+def render_single_q(env, Q, state_recognizer=None, verbose=False):
     """
         Renders Q function once on environment. Watch your agent play!
 
@@ -194,7 +194,7 @@ def render_single_q(env, Q, state_recognizer=None):
         action = np.argmax(Q[state])
         if state_recognizer:
             _, state_features, reward, done, _ = env.step(action)
-            state = int(state_recognizer.recognize(state_features))
+            state = int(state_recognizer.recognize(state_features, verbose=verbose))
         else:
             state, reward, done, _ = env.step(action)
         episode_reward += reward
@@ -221,7 +221,7 @@ def _run_trial_q(env, Q, state_recognizer=None, verbose=False):
         action = np.argmax(Q[state])
         if state_recognizer:
             actual_state, state_features, reward, done, _ = env.step(action)
-            state = int(state_recognizer.recognize(state_features))
+            state = int(state_recognizer.recognize(state_features, verbose=True))
         else:
             state, reward, done, _ = env.step(action)
         if verbose:
@@ -284,5 +284,5 @@ def test_with_asr():
         state_recognizer = StateRecognizer(env_asr, digits_recognizer)
         Q = qlearning(env)
 
-        print_avg_score(env_asr, Q, state_recognizer)
-        render_single_q(env_asr, Q, state_recognizer)
+        # print_avg_score(env_asr, Q, state_recognizer, verbose=True)
+        render_single_q(env_asr, Q, state_recognizer, verbose=True)

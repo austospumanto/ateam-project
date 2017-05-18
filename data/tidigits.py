@@ -20,4 +20,5 @@ def get_audio_file_path(desired_digits, desired_length=2):
     c.execute('select * from tidigits where digits = ?;', (desired_digits,))
     rows = c.fetchall()
     choice = random.choice(rows)
+    print choice
     return choice['path']

@@ -7,7 +7,7 @@ class StateRecognizer(object):
         self._recognizer = recognizer
 
     def recognize(self, *a, **kw):
-        verbose = kw.get('verbose')
+        verbose = kw.pop('verbose', None)
         state = self._recognizer.recognize(*a, **kw)
         if not state.isdigit() or int(state) not in self._env.P:
             rand_state = random.choice(self._env.P.keys())
