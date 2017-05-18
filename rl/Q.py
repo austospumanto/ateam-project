@@ -8,9 +8,10 @@ import tqdm
 # This registers the various FrozenLake maps by ID with Gym
 from envs.lake_envs import *
 
-from speech import digits
 from speech.model import CTCModel
 from envs import envs
+from rl.StateRecognizer import StateRecognizer
+from speech.digits import DigitsRecognizer
 
 
 def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999,
@@ -89,7 +90,7 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
     return Q
 
 
-def qlearning_pretrained_asr(env_asr, digit_recognizer, model, sess, num_episodes=15000, gamma=0.98,
+def qlearning_pretrained_asr(env_asr, state_recognizer, num_episodes=15000, gamma=0.98,
                              lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
     Q = np.zeros((env_asr.nS, env_asr.nA))
     for episode_idx in tqdm.tqdm(range(num_episodes)):
@@ -114,7 +115,7 @@ def qlearning_pretrained_asr(env_asr, digit_recognizer, model, sess, num_episode
             _, next_state_features, reward, done, _ = env_asr.step(action)
 
             # Translate the auditory features of the next state to the state's index via ASR
-            next_state = int(digit_recognizer.recognize(next_state_features, model, sess))
+            next_state = int(state_recognizer.recognize(next_state_features))
 
             # TODO: Should we hard-code the Goal state as being state 15? Should it know what
             #      state it was in at the time of episode termination?
@@ -171,7 +172,7 @@ def _choose_egreedy_action(env, s, Q, e):
 
 
 # Functions for testing
-def render_single_q(env, Q):
+def render_single_q(env, Q, state_recognizer=None):
     """
         Renders Q function once on environment. Watch your agent play!
 
@@ -191,13 +192,17 @@ def render_single_q(env, Q):
         env.render()
         time.sleep(0.5)  # Seconds between frames. Modify as you wish.
         action = np.argmax(Q[state])
-        state, reward, done, _ = env.step(action)
+        if state_recognizer:
+            _, state_features, reward, done, _ = env.step(action)
+            state = int(state_recognizer.recognize(state_features))
+        else:
+            state, reward, done, _ = env.step(action)
         episode_reward += reward
 
     print "Episode reward: %f" % episode_reward
 
 
-def _run_trial_q(env, Q):
+def _run_trial_q(env, Q, state_recognizer=None, verbose=False):
     """
         Runs Q function once on environment and returns the reward.
 
@@ -214,15 +219,23 @@ def _run_trial_q(env, Q):
     done = False
     while not done:
         action = np.argmax(Q[state])
-        state, reward, done, _ = env.step(action)
+        if state_recognizer:
+            actual_state, state_features, reward, done, _ = env.step(action)
+            state = int(state_recognizer.recognize(state_features))
+        else:
+            state, reward, done, _ = env.step(action)
+        if verbose:
+            print 'Actual state: %d' % actual_state
         episode_reward += reward
+    if verbose:
+        print 'Trial reward: %d\n' % episode_reward
     return episode_reward
 
 
-def print_avg_score(env, Q):
+def print_avg_score(env, Q, state_recognizer=None):
     # Average episode rewards over trials
     num_trials = 100
-    episode_rewards = [_run_trial_q(env, Q) for _ in range(num_trials)]
+    episode_rewards = [_run_trial_q(env, Q, state_recognizer) for _ in range(num_trials)]
     avg_reward = np.average(episode_rewards)
     print 'Averge episode score/reward: %.3f' % avg_reward
 
@@ -234,10 +247,8 @@ def vanilla_example():
     render_single_q(env, Q)
 
 
-def pretrained_asr_example():
-    digit_recognizer = digits.DigitsRecognizer()
-    digits_speaker = digits.DigitsSpeaker()
-    env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'), digits_speaker)
+def train_and_test_with_asr():
+    env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'))
 
     with tf.Session() as sess:
         model = CTCModel()
@@ -247,7 +258,31 @@ def pretrained_asr_example():
         if ckpt and (tf.gfile.Exists(ckpt.model_checkpoint_path) or tf.gfile.Exists(v2_path)):
             model.saver.restore(sess, ckpt.model_checkpoint_path)
             print "Restored save properly."
-        Q = qlearning_pretrained_asr(env_asr, digit_recognizer, model, sess)
 
-    print_avg_score(env_asr, Q)
-    render_single_q(env_asr, Q)
+        digits_recognizer = DigitsRecognizer(model, sess)
+        state_recognizer = StateRecognizer(env_asr, digits_recognizer)
+        Q = qlearning_pretrained_asr(env_asr, state_recognizer)
+
+        print_avg_score(env_asr, Q, state_recognizer)
+        render_single_q(env_asr, Q, state_recognizer)
+
+
+def test_with_asr():
+    env = gym.make('Stochastic-4x4-FrozenLake-v0')
+    env_asr = envs.MfccFrozenlake(env)
+
+    with tf.Session() as sess:
+        model = CTCModel()
+        ckpt = tf.train.get_checkpoint_state("cs224s/viggy_assign3/saved_models")
+        v2_path = ckpt.model_checkpoint_path + ".index" if ckpt else ""
+
+        if ckpt and (tf.gfile.Exists(ckpt.model_checkpoint_path) or tf.gfile.Exists(v2_path)):
+            model.saver.restore(sess, ckpt.model_checkpoint_path)
+            print "Restored save properly."
+
+        digits_recognizer = DigitsRecognizer(model, sess)
+        state_recognizer = StateRecognizer(env_asr, digits_recognizer)
+        Q = qlearning(env)
+
+        print_avg_score(env_asr, Q, state_recognizer)
+        render_single_q(env_asr, Q, state_recognizer)

@@ -18,6 +18,7 @@ from speech.model_utils import *
 import pdb
 from time import gmtime, strftime
 
+
 class Config:
     """Holds model hyperparams and data information.
 
@@ -36,6 +37,7 @@ class Config:
     num_epochs = 50
     l2_lambda = 0.0000001
     lr = 1e-4
+
 
 class CTCModel():
     """
@@ -71,14 +73,11 @@ class CTCModel():
         inputs_placeholder = None
         seq_lens_placeholder = None
 
-        ### YOUR CODE HERE (~3 lines)
         inputs_placeholder = tf.placeholder(tf.float32, (None, None, Config.num_final_features))
-        seq_lens_placeholder = tf.placeholder(tf.int32, (None))
-        ### END YOUR CODE
+        seq_lens_placeholder = tf.placeholder(tf.int32, (None,))
 
         self.inputs_placeholder = inputs_placeholder
         self.seq_lens_placeholder = seq_lens_placeholder
-
 
     def create_feed_dict(self, inputs_batch, seq_lens_batch):
         """Creates the feed_dict for the digit recognizer.
@@ -101,12 +100,8 @@ class CTCModel():
             feed_dict: The feed dictionary mapping from placeholders to values.
         """
         feed_dict = {}
-
-        ### YOUR CODE HERE (~3-4 lines)
         feed_dict[self.inputs_placeholder] = inputs_batch
         feed_dict[self.seq_lens_placeholder] = seq_lens_batch
-        ### END YOUR CODE
-
         return feed_dict
 
     def add_prediction_op(self):
@@ -127,7 +122,6 @@ class CTCModel():
 
         logits = None
 
-        ### YOUR CODE HERE (~10-15 lines)
         # Initialize GRU
         cell = tf.contrib.rnn.GRUCell(Config.num_hidden)
         f, last_state = tf.nn.dynamic_rnn(cell, self.inputs_placeholder,
@@ -142,7 +136,6 @@ class CTCModel():
             new_shape = [-1, f_shape[2]]
             matmul_and_add = tf.matmul(tf.reshape(f, new_shape), W) + b
             logits = tf.reshape(matmul_and_add, [-1, f_shape[1], Config.num_classes])
-        ### END YOUR CODE
         self.logits = tf.transpose(logits, perm=[1, 0, 2])
 
     def add_decoder_and_wer_op(self):
@@ -154,7 +147,6 @@ class CTCModel():
         """
         decoded_sequence = None
 
-        ### YOUR CODE HERE (~2-3 lines)
         decoded, log_probs = tf.nn.ctc_beam_search_decoder(
             self.logits,
             self.seq_lens_placeholder,
@@ -162,7 +154,6 @@ class CTCModel():
         )
         # top_paths = 1, so take first (and only) decoded sequence
         decoded_sequence = tf.cast(decoded[0], tf.int32)
-        ### END YOUR CODE
 
         self.decoded_sequence = decoded_sequence
 

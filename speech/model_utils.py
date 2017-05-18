@@ -2,14 +2,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from six.moves.urllib.request import urlretrieve
 from six.moves import xrange as range
 
-import os
-import pdb
-import sys
 import numpy as np
-import os.path
 import tensorflow as tf
 import cPickle as pickle
 
@@ -34,21 +29,23 @@ def sparse_tuple_from(sequences, dtype=np.int32):
 
     return indices, values, shape
 
+
 def label_from_sparse_tensor(sparse_tensor):
     inv_index_mapping = {v: k for k, v in get_tidigits_to_index_mapping().items()}
 
     dense_tensor = tf.sparse_tensor_to_dense(sparse_tensor, default_value=-1).eval()
     # print (dense_tensor)
-    label = "".join([inv_index_mapping[ch] for ch in dense_tensor if ch != -1])
+    label = "".join([inv_index_mapping[ch] for ch in dense_tensor[0] if ch != -1])
 
     label = label.replace('z', '0')
     label = label.replace('_', '')
     label = label.replace('o', '10')
     return label
 
+
 def pad_sequences(sequences, maxlen=None, dtype=np.float32,
                   padding='post', truncating='post', value=0.):
-    '''Pads each sequence to the same length: the length of the longest
+    """Pads each sequence to the same length: the length of the longest
     sequence.
         If maxlen is provided, any sequence longer than maxlen is truncated to
         maxlen. Truncation happens off either the beginning or the end
@@ -66,7 +63,7 @@ def pad_sequences(sequences, maxlen=None, dtype=np.float32,
         Returns
             x: numpy array with dimensions (number_of_sequences, maxlen)
             lengths: numpy array with the original sequence lengths
-    '''
+    """
     lengths = np.asarray([len(s) for s in sequences], dtype=np.int64)
 
     nb_samples = len(sequences)
@@ -110,6 +107,7 @@ def pad_sequences(sequences, maxlen=None, dtype=np.float32,
 def get_tidigits_to_index_mapping():
     return {"z": 0, "o": 10, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "_": 11}
 
+
 def compare_predicted_to_true(preds, trues_tup):
     inv_index_mapping = {v: k for k, v in get_tidigits_to_index_mapping().items()}
 
@@ -122,10 +120,12 @@ def compare_predicted_to_true(preds, trues_tup):
 
         print("Predicted: {}\n   Actual: {}\n".format(predicted_label, true_label))
 
+
 def load_dataset(dataset_path):
     with open(dataset_path, 'rb') as f:
         dataset = pickle.load(f)
     return dataset
+
 
 def make_batches(dataset, batch_size=16):
     examples = []

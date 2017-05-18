@@ -16,6 +16,12 @@ class Ateam(object):
     def process_tidigits(self):
         process_tidigits.process_data()
 
+    def train_and_test_with_asr(self):
+        Q.train_and_test_with_asr()
+
+    def test_with_asr(self):
+        Q.test_with_asr()
+
 
 if __name__ == '__main__':
     fire.Fire(Ateam)
