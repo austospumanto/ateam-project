@@ -8,6 +8,7 @@ CDS = ['CD4_1_1', 'CD4_2_1', 'CD4_3_1']
 conn = sqlite3.connect(DB_NAME)
 conn.row_factory = sqlite3.Row
 
+
 def get_audio_file_path(desired_digits, desired_length=2):
     # Must have desired length, or else we prepend zeros
     if len(desired_digits) != desired_length:

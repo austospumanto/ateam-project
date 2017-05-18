@@ -3,6 +3,7 @@ import sqlite3
 
 from tidigits import TIDIGITS_PATH, CDS, DB_NAME
 
+
 def process_data(sequence_len=2):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
