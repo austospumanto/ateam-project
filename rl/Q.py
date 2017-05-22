@@ -221,7 +221,7 @@ def _run_trial_q(env, Q, state_recognizer=None, verbose=False):
         action = np.argmax(Q[state])
         if state_recognizer:
             actual_state, state_features, reward, done, _ = env.step(action)
-            state = int(state_recognizer.recognize(state_features, verbose=True))
+            state = int(state_recognizer.recognize(state_features, verbose=verbose))
         else:
             state, reward, done, _ = env.step(action)
         if verbose:
@@ -232,10 +232,12 @@ def _run_trial_q(env, Q, state_recognizer=None, verbose=False):
     return episode_reward
 
 
-def print_avg_score(env, Q, state_recognizer=None):
+def print_avg_score(env, Q, state_recognizer=None, verbose=False):
     # Average episode rewards over trials
     num_trials = 100
-    episode_rewards = [_run_trial_q(env, Q, state_recognizer) for _ in range(num_trials)]
+    episode_rewards = []
+    for _ in tqdm.tqdm(xrange(num_trials)):
+        episode_rewards.append(_run_trial_q(env, Q, state_recognizer, verbose=verbose))
     avg_reward = np.average(episode_rewards)
     print 'Averge episode score/reward: %.3f' % avg_reward
 
@@ -284,5 +286,5 @@ def test_with_asr():
         state_recognizer = StateRecognizer(env_asr, digits_recognizer)
         Q = qlearning(env)
 
-        # print_avg_score(env_asr, Q, state_recognizer, verbose=True)
+        print_avg_score(env_asr, Q, state_recognizer, verbose=False)
         render_single_q(env_asr, Q, state_recognizer, verbose=True)

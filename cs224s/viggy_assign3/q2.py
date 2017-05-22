@@ -33,7 +33,7 @@ class Config:
     num_classes = 12   # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
     num_hidden = 128
 
-    num_epochs = 50
+    num_epochs = 500
     l2_lambda = 0.000000001
     lr = 1e-3
 
