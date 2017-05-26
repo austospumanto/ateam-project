@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 
+import os
+import dotenv
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Load environment variables from `base/.env` if that file exists
+# NOTE: There should be no .env file in production. Environment variables are
+#       injected in another way in production.
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(dotenv_path):
+    print('Loading environment variables from {}'.format(dotenv_path))
+    dotenv.load_dotenv(dotenv_path)
+
+
 import fire
 
 from rl import Q
@@ -26,5 +41,4 @@ class Ateam(object):
         Q.test_with_asr()
 
 
-if __name__ == '__main__':
-    fire.Fire(Ateam)
+fire.Fire(Ateam)

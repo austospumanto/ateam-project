@@ -4,6 +4,7 @@ import gym
 import numpy as np
 import tensorflow as tf
 import tqdm
+import logging
 
 # This registers the various FrozenLake maps by ID with Gym
 from envs.lake_envs import *
@@ -13,7 +14,9 @@ from envs import envs
 from rl.StateRecognizer import StateRecognizer
 from speech.digits import DigitsRecognizer
 
-LOGDIR = 'tensorboard_logs'
+from admin.config import project_config
+
+logger = logging.getLogger(__name__)
 
 
 def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999,
@@ -32,7 +35,7 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
             Number of episodes of training.
         gamma: float
             Discount factor. Number in range [0, 1)
-        learning_rate: float
+        lr: float
             Learning rate. Number in range [0, 1)
         e: float
             Epsilon value used in the epsilon-greedy method.
@@ -69,7 +72,7 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
 
             episode_reward += reward
 
-        # If we're running this as part of 5c, then record the scores
+        # If we'res running this as part of 5c, then record the scores
         if episode_scores is not None:
             # NOTE: Here I am simply recording 0 or 1 (the undiscounted score)
             episode_scores[episode_idx] = episode_reward
@@ -91,7 +94,8 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
 
     return Q
 
-def shallow_qlearning(env, sess, model, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999,
+
+def shallow_qlearning(env, sess, model, num_episodes=15000, gamma=0.98, e=0.5, decay_rate=0.9999,
                       episode_scores=None):
     """
         Learn state-action values using the Q-learning algorithm with function approximation
@@ -107,7 +111,7 @@ def shallow_qlearning(env, sess, model, num_episodes=15000, gamma=0.98, lr=0.08,
             Number of episodes of training.
         gamma: float
             Discount factor. Number in range [0, 1)
-        learning_rate: float
+        lr: float
             Learning rate. Number in range [0, 1)
         e: float
             Epsilon value used in the epsilon-greedy method.
@@ -159,7 +163,8 @@ def shallow_qlearning(env, sess, model, num_episodes=15000, gamma=0.98, lr=0.08,
             e *= decay_rate
         rewards.append(episode_reward)
     percent_success = float(len([reward for reward in rewards if reward > 0.0])) / float(num_episodes)
-    print "Percent of succesful episodes: " + str(sum(rewards) / num_episodes * 100) + "%"
+    logger.info("Percent of succesful episodes: " + str(sum(rewards) / num_episodes * 100) + "%")
+
 
 def qlearning_pretrained_asr(env_asr, state_recognizer, num_episodes=15000, gamma=0.98,
                              lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
@@ -198,7 +203,7 @@ def qlearning_pretrained_asr(env_asr, state_recognizer, num_episodes=15000, gamm
 
             episode_reward += reward
 
-        # If we're running this as part of 5c, then record the scores
+        # If we'res running this as part of 5c, then record the scores
         if episode_scores is not None:
             # NOTE: Here I am simply recording 0 or 1 (the undiscounted score)
             episode_scores[episode_idx] = episode_reward
@@ -243,7 +248,7 @@ def _choose_egreedy_action(env, s, Q, e):
 
 
 def _one_hot_state_vector(s, nS):
-    return np.identity(nS)[s:s+1]
+    return np.identity(nS)[s:s + 1]
 
 
 # Functions for testing
@@ -274,7 +279,7 @@ def render_single_q(env, Q, state_recognizer=None, verbose=False):
             state, reward, done, _ = env.step(action)
         episode_reward += reward
 
-    print "Episode reward: %f" % episode_reward
+    logger.info("Episode reward: %f" % episode_reward)
 
 
 def _run_trial_q(env, Q, state_recognizer=None, verbose=False):
@@ -300,10 +305,10 @@ def _run_trial_q(env, Q, state_recognizer=None, verbose=False):
         else:
             state, reward, done, _ = env.step(action)
         if verbose:
-            print 'Actual state: %d' % actual_state
+            logger.info('Actual state: %d' % actual_state)
         episode_reward += reward
     if verbose:
-        print 'Trial reward: %d\n' % episode_reward
+        logger.info('Trial reward: %d\n' % episode_reward)
     return episode_reward
 
 
@@ -314,7 +319,7 @@ def print_avg_score(env, Q, state_recognizer=None, verbose=False):
     for _ in tqdm.tqdm(xrange(num_trials)):
         episode_rewards.append(_run_trial_q(env, Q, state_recognizer, verbose=verbose))
     avg_reward = np.average(episode_rewards)
-    print 'Averge episode score/reward: %.3f' % avg_reward
+    logger.info('Averge episode score/reward: %.3f' % avg_reward)
 
 
 def vanilla_example():
@@ -336,12 +341,11 @@ def shallow_q_network():
         next_Q = tf.placeholder(shape=[1, env.nA], dtype=tf.float32)
         loss = tf.reduce_sum(tf.square(next_Q - Q_out))
         gdo = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
-        model = { 'inputs': inputs, 'W': W, 'Q_out': Q_out, 'action': action, 'next_Q': next_Q, 'loss': loss, 'gdo': gdo }
+        model = {'inputs': inputs, 'W': W, 'Q_out': Q_out, 'action': action, 'next_Q': next_Q, 'loss': loss, 'gdo': gdo}
 
-        fw = tf.summary.FileWriter(LOGDIR, sess.graph)
+        fw = tf.summary.FileWriter(project_config.tensorboard_logdir, sess.graph)
 
         shallow_qlearning(env, sess, model, num_episodes=2000)
-
 
 
 def train_and_test_with_asr():
@@ -354,7 +358,7 @@ def train_and_test_with_asr():
 
         if ckpt and (tf.gfile.Exists(ckpt.model_checkpoint_path) or tf.gfile.Exists(v2_path)):
             model.saver.restore(sess, ckpt.model_checkpoint_path)
-            print "Restored save properly."
+            logger.info("Restored save properly.")
 
         digits_recognizer = DigitsRecognizer(model, sess)
         state_recognizer = StateRecognizer(env_asr, digits_recognizer)
@@ -375,7 +379,7 @@ def test_with_asr():
 
         if ckpt and (tf.gfile.Exists(ckpt.model_checkpoint_path) or tf.gfile.Exists(v2_path)):
             model.saver.restore(sess, ckpt.model_checkpoint_path)
-            print "Restored save properly."
+            logger.info("Restored save properly.")
 
         digits_recognizer = DigitsRecognizer(model, sess)
         state_recognizer = StateRecognizer(env_asr, digits_recognizer)
