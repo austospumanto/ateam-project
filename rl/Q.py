@@ -13,6 +13,8 @@ from envs import envs
 from rl.StateRecognizer import StateRecognizer
 from speech.digits import DigitsRecognizer
 
+LOGDIR = 'tensorboard_logs'
+
 
 def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999,
               episode_scores=None):
@@ -89,7 +91,7 @@ def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.
 
     return Q
 
-def shallow_qlearning(env, model, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999,
+def shallow_qlearning(env, sess, model, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999,
                       episode_scores=None):
     """
         Learn state-action values using the Q-learning algorithm with function approximation
@@ -117,6 +119,7 @@ def shallow_qlearning(env, model, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5
         np.array
             An array of shape [env.nS x env.nA] representing state, action values
     """
+    MAX_STEPS = 100
     inputs = model['inputs']
     action = model['action']
     Q_out = model['Q_out']
@@ -126,36 +129,37 @@ def shallow_qlearning(env, model, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5
 
     rewards = []
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        for episode_idx in tqdm.tqdm(range(num_episodes)):
-            curr_state = env.reset()
-            done = False
-            episode_reward = 0.0
-            while not done:
-                # Choose an action "epsilon-greedily" (where epsilon is the var "e")
+    sess.run(tf.global_variables_initializer())
+    for episode_idx in tqdm.tqdm(range(num_episodes)):
+        curr_state = env.reset()
+        done = False
+        episode_reward = 0.0
+        steps_taken = 0
+        while not done and steps_taken < MAX_STEPS:
+            steps_taken += 1
 
-                action_array, Q = sess.run([action, Q_out], feed_dict={inputs: _one_hot_state_vector(curr_state, env.nS)})
-                if random.random() < e:
-                    action_array[0] = env.action_space.sample()
+            # Choose an action "epsilon-greedily" (where epsilon is the var "e")
+            action_array, Q = sess.run([action, Q_out], feed_dict={inputs: _one_hot_state_vector(curr_state, env.nS)})
+            if random.random() < e:
+                action_array[0] = env.action_space.sample()
 
-                # Use env's transition probs to "choose" next state
-                next_state, reward, done, _ = env.step(action_array[0])
+            # Use env's transition probs to "choose" next state
+            next_state, reward, done, _ = env.step(action_array[0])
 
-                Q_1 = sess.run(Q_out, feed_dict={inputs: _one_hot_state_vector(next_state, env.nS)})
-                target_Q = Q
-                target_Q[0, action_array[0]] = reward + gamma * np.max(Q_1)
+            Q_1 = sess.run(Q_out, feed_dict={inputs: _one_hot_state_vector(next_state, env.nS)})
+            target_Q = Q
+            target_Q[0, action_array[0]] = reward + gamma * np.max(Q_1)
 
-                sess.run([gdo, W], feed_dict={inputs: _one_hot_state_vector(curr_state, env.nS), next_Q: target_Q})
-                # Move to the next state
-                cur_state = next_state
-                episode_reward += reward
+            sess.run([gdo, W], feed_dict={inputs: _one_hot_state_vector(curr_state, env.nS), next_Q: target_Q})
+            # Move to the next state
+            curr_state = next_state
+            episode_reward += reward
 
-                # Decay the randomness of our action selection (i.e. increase greediness)
-                e *= decay_rate
-            rewards.append(episode_reward)
-        percent_success = float(len([reward for reward in rewards if reward > 0.0])) / float(num_episodes)
-        print "Percent of succesful episodes: " + str(sum(rewards) / num_episodes) + "%"
+            # Decay the randomness of our action selection (i.e. increase greediness)
+            e *= decay_rate
+        rewards.append(episode_reward)
+    percent_success = float(len([reward for reward in rewards if reward > 0.0])) / float(num_episodes)
+    print "Percent of succesful episodes: " + str(sum(rewards) / num_episodes * 100) + "%"
 
 def qlearning_pretrained_asr(env_asr, state_recognizer, num_episodes=15000, gamma=0.98,
                              lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
@@ -237,8 +241,10 @@ def _choose_egreedy_action(env, s, Q, e):
         a = random.randint(0, env.nA - 1)
     return a
 
+
 def _one_hot_state_vector(s, nS):
     return np.identity(nS)[s:s+1]
+
 
 # Functions for testing
 def render_single_q(env, Q, state_recognizer=None, verbose=False):
@@ -317,19 +323,26 @@ def vanilla_example():
     print_avg_score(env, Q)
     render_single_q(env, Q)
 
-def shallow_q_network():
-    env = gym.make('Stochastic-4x4-FrozenLake-v0')
-    inputs = tf.placeholder(shape=[1, env.nS], dtype=tf.float32)
-    W = tf.Variable(tf.random_uniform([env.nS, env.nA], 0, 0.01))
-    Q_out = tf.matmul(inputs, W)
-    action = tf.argmax(Q_out, 1)
 
-    #Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
-    next_Q = tf.placeholder(shape=[1, env.nA], dtype=tf.float32)
-    loss = tf.reduce_sum(tf.square(next_Q - Q_out))
-    gdo = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
-    model = { 'inputs': inputs, 'W': W, 'Q_out': Q_out, 'action': action, 'next_Q': next_Q, 'loss': loss, 'gdo': gdo }
-    shallow_qlearning(env, model, num_episodes=2000)
+def shallow_q_network():
+    with tf.Session() as sess:
+        env = gym.make('Stochastic-4x4-FrozenLake-v0')
+        inputs = tf.placeholder(shape=[1, env.nS], dtype=tf.float32)
+        W = tf.Variable(tf.random_uniform([env.nS, env.nA], 0, 0.01))
+        Q_out = tf.matmul(inputs, W)
+        action = tf.argmax(Q_out, 1)
+
+        # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
+        next_Q = tf.placeholder(shape=[1, env.nA], dtype=tf.float32)
+        loss = tf.reduce_sum(tf.square(next_Q - Q_out))
+        gdo = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
+        model = { 'inputs': inputs, 'W': W, 'Q_out': Q_out, 'action': action, 'next_Q': next_Q, 'loss': loss, 'gdo': gdo }
+
+        fw = tf.summary.FileWriter(LOGDIR, sess.graph)
+
+        shallow_qlearning(env, sess, model, num_episodes=2000)
+
+
 
 def train_and_test_with_asr():
     env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'))

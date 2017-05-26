@@ -5,6 +5,7 @@
 *.pyc
 data/LDC93S10_TIDIGITS/*
 data/tidigits.db
+tensorboard_logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
