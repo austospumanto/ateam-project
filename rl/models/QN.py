@@ -7,8 +7,6 @@ from collections import deque
 
 from rl.utils.general import get_logger, Progbar, export_plot
 from rl.utils.replay_buffer import ReplayBuffer
-from rl.utils.preprocess import greyscale
-from rl.utils.wrappers import PreproWrapper, MaxAndSkipEnv
 
 
 class QN(object):
@@ -94,6 +92,12 @@ class QN(object):
         """
         raise NotImplementedError
 
+    def update_step(self, *args):
+        """
+        Update everything
+        """
+        raise NotImplementedError
+
     def init_averages(self):
         """
         Defines extra attributes for tensorboard
@@ -160,9 +164,11 @@ class QN(object):
                 t += 1
                 last_eval += 1
                 last_record += 1
-                if self.config.render_train: self.env.render()
+                if self.config.render_train:
+                    self.env.render()
+
                 # replay memory stuff
-                idx      = replay_buffer.store_frame(state)
+                idx      = replay_buffer.store_audio(state)
                 q_input = replay_buffer.encode_recent_observation()
 
                 # chose action according to current Q and exploration
@@ -277,7 +283,7 @@ class QN(object):
                     env.render()
 
                 # store last state in buffer
-                idx     = replay_buffer.store_frame(state)
+                idx     = replay_buffer.store_audio(state)
                 q_input = replay_buffer.encode_recent_observation()
 
                 action = self.get_action(q_input)

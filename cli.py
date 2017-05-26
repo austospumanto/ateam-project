@@ -19,6 +19,8 @@ import fire
 
 from rl import Q
 from data import process_tidigits
+from rl import train_frozenlake_aqn
+from envs.lake_envs import *
 
 
 class Ateam(object):
@@ -39,6 +41,9 @@ class Ateam(object):
 
     def test_with_asr(self):
         Q.test_with_asr()
+
+    def train_frozenlake_aqn(self):
+        train_frozenlake_aqn.main()
 
 
 fire.Fire(Ateam)

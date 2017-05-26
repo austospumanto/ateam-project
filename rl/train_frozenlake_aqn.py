@@ -23,7 +23,9 @@ Then, connect remotely to
 address-ip-of-the-server:6006 
 6006 is the default port used by tensorboard.
 """
-if __name__ == '__main__':
+
+
+def main():
     # make env
     env = gym.make(config.env_name)
     env = AudioFrozenlake(env)
@@ -38,3 +40,6 @@ if __name__ == '__main__':
     # train model
     model = AQN(env, config)
     model.run(exp_schedule, lr_schedule)
+
+if __name__ == '__main__':
+    main()
