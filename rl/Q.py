@@ -312,12 +312,29 @@ def _run_trial_q(env, Q, state_recognizer=None, verbose=False):
     return episode_reward
 
 
-def print_avg_score(env, Q, state_recognizer=None, verbose=False):
+def _run_trial_network_q(env, sess, model):
+    episode_reward = 0
+    curr_state = env.reset()
+    done = False
+    action = model['action']
+    inputs = model['inputs']
+    while not done:
+        action_array = sess.run([action], feed_dict={inputs: _one_hot_state_vector(curr_state, env.nS)})
+        next_state, reward, done, _ = env.step(action_array[0][0])
+        episode_reward += reward
+        curr_state = next_state
+    return episode_reward
+
+
+def print_avg_score(env, use_network=False, Q=None, sess=None, model=None, state_recognizer=None, verbose=False):
     # Average episode rewards over trials
     num_trials = 100
     episode_rewards = []
     for _ in tqdm.tqdm(xrange(num_trials)):
-        episode_rewards.append(_run_trial_q(env, Q, state_recognizer, verbose=verbose))
+        if use_network:
+            episode_rewards.append(_run_trial_network_q(env, sess, model))
+        else:
+            episode_rewards.append(_run_trial_q(env, Q, state_recognizer, verbose=verbose))
     avg_reward = np.average(episode_rewards)
     logger.info('Averge episode score/reward: %.3f' % avg_reward)
 
@@ -346,6 +363,7 @@ def shallow_q_network():
         fw = tf.summary.FileWriter(project_config.tensorboard_logdir, sess.graph)
 
         shallow_qlearning(env, sess, model, num_episodes=2000)
+        print_avg_score(env, use_network=True, sess=sess, model=model)
 
 
 def train_and_test_with_asr():
@@ -364,8 +382,8 @@ def train_and_test_with_asr():
         state_recognizer = StateRecognizer(env_asr, digits_recognizer)
         Q = qlearning_pretrained_asr(env_asr, state_recognizer)
 
-        print_avg_score(env_asr, Q, state_recognizer)
-        render_single_q(env_asr, Q, state_recognizer)
+        print_avg_score(env_asr, Q=Q, state_recognizer=state_recognizer)
+        render_single_q(env_asr, Q=Q, state_recognizer=state_recognizer)
 
 
 def test_with_asr():
@@ -385,5 +403,5 @@ def test_with_asr():
         state_recognizer = StateRecognizer(env_asr, digits_recognizer)
         Q = qlearning(env)
 
-        print_avg_score(env_asr, Q, state_recognizer, verbose=False)
-        render_single_q(env_asr, Q, state_recognizer, verbose=True)
+        print_avg_score(env_asr, Q=Q, state_recognizer=state_recognizer, verbose=False)
+        render_single_q(env_asr, Q=Q, state_recognizer=state_recognizer, verbose=True)
