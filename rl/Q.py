@@ -1,20 +1,19 @@
+import logging
 import random
 import time
+
 import gym
 import numpy as np
 import tensorflow as tf
 import tqdm
-import logging
-
-# This registers the various FrozenLake maps by ID with Gym
-from envs.lake_envs import *
-
-from speech.model import CTCModel
-from envs import envs
-from rl.StateRecognizer import StateRecognizer
-from speech.digits import DigitsRecognizer
 
 from admin.config import project_config
+from envs import MfccFrozenlake
+from speech.StateRecognizer import StateRecognizer
+from speech.digits import DigitsRecognizer
+from speech.model import CTCModel
+
+# This registers the various FrozenLake maps by ID with Gym
 
 logger = logging.getLogger(__name__)
 
@@ -367,7 +366,7 @@ def shallow_q_network():
 
 
 def train_and_test_with_asr():
-    env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'))
+    env_asr = MfccFrozenlake.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'))
 
     with tf.Session() as sess:
         model = CTCModel()
@@ -388,7 +387,7 @@ def train_and_test_with_asr():
 
 def test_with_asr():
     env = gym.make('Stochastic-4x4-FrozenLake-v0')
-    env_asr = envs.MfccFrozenlake(env)
+    env_asr = MfccFrozenlake.MfccFrozenlake(env)
 
     with tf.Session() as sess:
         model = CTCModel()
