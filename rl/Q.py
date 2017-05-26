@@ -123,7 +123,6 @@ def shallow_qlearning(env, sess, model, num_episodes=15000, gamma=0.98, e=0.5, d
         np.array
             An array of shape [env.nS x env.nA] representing state, action values
     """
-    MAX_STEPS = 100
     inputs = model['inputs']
     action = model['action']
     Q_out = model['Q_out']
@@ -139,22 +138,31 @@ def shallow_qlearning(env, sess, model, num_episodes=15000, gamma=0.98, e=0.5, d
         done = False
         episode_reward = 0.0
         steps_taken = 0
-        while not done and steps_taken < MAX_STEPS:
+        while not done:
             steps_taken += 1
 
             # Choose an action "epsilon-greedily" (where epsilon is the var "e")
-            action_array, Q = sess.run([action, Q_out], feed_dict={inputs: _one_hot_state_vector(curr_state, env.nS)})
+            if isinstance(curr_state, int):
+                curr_input_vector = _one_hot_state_vector(curr_state, env.nS)
+            else:
+                curr_input_vector = curr_state
+            action_array, Q = sess.run([action, Q_out], feed_dict={inputs: curr_input_vector})
             if random.random() < e:
                 action_array[0] = env.action_space.sample()
 
             # Use env's transition probs to "choose" next state
             next_state, reward, done, _ = env.step(action_array[0])
 
-            Q_1 = sess.run(Q_out, feed_dict={inputs: _one_hot_state_vector(next_state, env.nS)})
+            if isinstance(next_state, int):
+                next_input_vector = _one_hot_state_vector(next_state, env.nS)
+            else:
+                next_input_vector = next_state
+
+            Q_1 = sess.run(Q_out, feed_dict={inputs: next_input_vector})
             target_Q = Q
             target_Q[0, action_array[0]] = reward + gamma * np.max(Q_1)
 
-            sess.run([gdo, W], feed_dict={inputs: _one_hot_state_vector(curr_state, env.nS), next_Q: target_Q})
+            sess.run([gdo, W], feed_dict={inputs: curr_input_vector, next_Q: target_Q})
             # Move to the next state
             curr_state = next_state
             episode_reward += reward
@@ -171,7 +179,7 @@ def qlearning_pretrained_asr(env_asr, state_recognizer, num_episodes=15000, gamm
     Q = np.zeros((env_asr.nS, env_asr.nA))
     for episode_idx in tqdm.tqdm(range(num_episodes)):
         # Choose a random starting state
-        cur_state = env_asr.reset()
+        cur_state = int(state_recognizer.recognize(env_asr.reset()))
 
         # Data structure for storing (s, a, r, s') tuples and
         sars = []
@@ -186,9 +194,7 @@ def qlearning_pretrained_asr(env_asr, state_recognizer, num_episodes=15000, gamm
             action = _choose_egreedy_action(env_asr, cur_state, Q, e)
 
             # Use env's transition probs to "choose" next state
-            # NOTE: We throw away the first return val (next_state) and last return val (info)
-            #       because using these would be cheating
-            _, next_state_features, reward, done, _ = env_asr.step(action)
+            next_state_features, reward, done, _ = env_asr.step(action)
 
             # Translate the auditory features of the next state to the state's index via ASR
             next_state = int(state_recognizer.recognize(next_state_features))
@@ -266,14 +272,17 @@ def render_single_q(env, Q, state_recognizer=None, verbose=False):
     """
 
     episode_reward = 0
-    state = env.reset()
+    if state_recognizer:
+        state = int(state_recognizer.recognize(env.reset()))
+    else:
+        state = env.reset()
     done = False
     while not done:
         env.render()
         time.sleep(0.5)  # Seconds between frames. Modify as you wish.
         action = np.argmax(Q[state])
         if state_recognizer:
-            _, state_features, reward, done, _ = env.step(action)
+            state_features, reward, done, _ = env.step(action)
             state = int(state_recognizer.recognize(state_features, verbose=verbose))
         else:
             state, reward, done, _ = env.step(action)
@@ -295,17 +304,18 @@ def _run_trial_q(env, Q, state_recognizer=None, verbose=False):
             state-action values.
     """
     episode_reward = 0
-    state = env.reset()
+    if state_recognizer:
+        state = int(state_recognizer.recognize(env.reset()))
+    else:
+        state = env.reset()
     done = False
     while not done:
         action = np.argmax(Q[state])
         if state_recognizer:
-            actual_state, state_features, reward, done, _ = env.step(action)
+            state_features, reward, done, _ = env.step(action)
             state = int(state_recognizer.recognize(state_features, verbose=verbose))
         else:
             state, reward, done, _ = env.step(action)
-        if verbose:
-            logger.info('Actual state: %d' % actual_state)
         episode_reward += reward
     if verbose:
         logger.info('Trial reward: %d\n' % episode_reward)
@@ -319,7 +329,11 @@ def _run_trial_network_q(env, sess, model):
     action = model['action']
     inputs = model['inputs']
     while not done:
-        action_array = sess.run([action], feed_dict={inputs: _one_hot_state_vector(curr_state, env.nS)})
+        if isinstance(curr_state, int):
+            input_vector = _one_hot_state_vector(curr_state, env.nS)
+        else:
+            input_vector = curr_state
+        action_array = sess.run([action], feed_dict={inputs: input_vector})
         next_state, reward, done, _ = env.step(action_array[0][0])
         episode_reward += reward
         curr_state = next_state
@@ -365,13 +379,32 @@ def shallow_q_network():
         shallow_qlearning(env, sess, model, num_episodes=2000)
         print_avg_score(env, use_network=True, sess=sess, model=model)
 
+def shallow_q_network_with_asr():
+    with tf.Session() as sess:
+        env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'))
+        inputs = tf.placeholder(shape=[None, env_asr.num_mfcc], dtype=tf.float32)
+        W = tf.Variable(tf.random_uniform([env_asr.num_mfcc, env_asr.nA], 0, 0.01))
+        Q_out = tf.matmul(inputs, W)
+        action = tf.argmax(Q_out, 1)
+
+        # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
+        next_Q = tf.placeholder(shape=[None, env_asr.nA], dtype=tf.float32)
+        loss = tf.reduce_sum(tf.square(next_Q - Q_out))
+        gdo = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
+        model = {'inputs': inputs, 'W': W, 'Q_out': Q_out, 'action': action, 'next_Q': next_Q, 'loss': loss, 'gdo': gdo}
+
+        fw = tf.summary.FileWriter(project_config.tensorboard_logdir, sess.graph)
+
+        shallow_qlearning(env_asr, sess, model, num_episodes=5000)
+        print_avg_score(env_asr, use_network=True, sess=sess, model=model)
+
 
 def train_and_test_with_asr():
     env_asr = envs.MfccFrozenlake(gym.make('Stochastic-4x4-FrozenLake-v0'))
 
     with tf.Session() as sess:
         model = CTCModel()
-        ckpt = tf.train.get_checkpoint_state("cs224s/viggy_assign3/saved_models")
+        ckpt = tf.train.get_checkpoint_state("res/cs224s/viggy_assign3/saved_models")
         v2_path = ckpt.model_checkpoint_path + ".index" if ckpt else ""
 
         if ckpt and (tf.gfile.Exists(ckpt.model_checkpoint_path) or tf.gfile.Exists(v2_path)):
@@ -392,7 +425,7 @@ def test_with_asr():
 
     with tf.Session() as sess:
         model = CTCModel()
-        ckpt = tf.train.get_checkpoint_state("cs224s/viggy_assign3/saved_models")
+        ckpt = tf.train.get_checkpoint_state("res/cs224s/viggy_assign3/saved_models")
         v2_path = ckpt.model_checkpoint_path + ".index" if ckpt else ""
 
         if ckpt and (tf.gfile.Exists(ckpt.model_checkpoint_path) or tf.gfile.Exists(v2_path)):
