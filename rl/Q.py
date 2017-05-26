@@ -18,8 +18,7 @@ from speech.model import CTCModel
 logger = logging.getLogger(__name__)
 
 
-def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999,
-              episode_scores=None):
+def qlearning(env, num_episodes=15000, gamma=0.98, lr=0.08, e=0.5, decay_rate=0.9999, episode_scores=None):
     """
         Learn state-action values using the Q-learning algorithm with epsilon-greedy exploration
         strategy.
@@ -377,6 +376,7 @@ def shallow_q_network():
 
         shallow_qlearning(env, sess, model, num_episodes=2000)
         print_avg_score(env, use_network=True, sess=sess, model=model)
+
 
 def shallow_q_network_with_asr():
     with tf.Session() as sess:
