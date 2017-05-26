@@ -142,10 +142,9 @@ class CTCModel():
                                 initializer=tf.zeros_initializer())
             W = tf.get_variable("W", shape=(Config.num_hidden, Config.num_classes),
                                 initializer=tf.contrib.layers.xavier_initializer())
-            f_shape = tf.shape(f)
-            new_shape = [-1, f_shape[2]]
+            new_shape = [-1, tf.shape(f)[2]]
             matmul_and_add = tf.matmul(tf.reshape(f, new_shape), W) + b
-            logits = tf.reshape(matmul_and_add, [-1, f_shape[1], Config.num_classes])
+            logits = tf.reshape(matmul_and_add, [-1, tf.shape(f)[1], Config.num_classes])
         ### END YOUR CODE
 
         self.logits = logits

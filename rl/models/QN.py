@@ -307,6 +307,7 @@ class QN(object):
         return avg_reward
 
     def record(self):
+        # TODO: Make this write the frozenlake text output to file
         """
         Re create an env and record a video for one episode
         """

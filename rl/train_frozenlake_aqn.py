@@ -1,10 +1,9 @@
 import gym
-from rl.utils.preprocess import greyscale
-from rl.utils.wrappers import PreproWrapper, MaxAndSkipEnv
 
 from rl.schedule import LinearExploration, LinearSchedule
 from rl.models.AQN import AQN
 from envs.MfccFrozenlake import MfccFrozenlake
+from envs.AudioFrozenlake import AudioFrozenlake
 
 from configs.train_frozenlake_aqn import config
 
@@ -27,10 +26,8 @@ address-ip-of-the-server:6006
 if __name__ == '__main__':
     # make env
     env = gym.make(config.env_name)
-    env = MfccFrozenlake(env)
-    env = MaxAndSkipEnv(env, skip=config.skip_frame)
-    env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1), 
-                        overwrite_render=config.overwrite_render)
+    env = AudioFrozenlake(env)
+    env = MfccFrozenlake(env, num_mfcc=config.num_mfcc)
 
     # exploration strategy
     exp_schedule = LinearExploration(env, config.eps_begin, config.eps_end, config.eps_nsteps)

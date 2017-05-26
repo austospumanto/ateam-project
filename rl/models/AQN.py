@@ -11,17 +11,14 @@ class AQN(DQN):
         data during training.  Note that when "None" is in a placeholder's shape, it's flexible
         (so we can use different batch sizes without rebuilding the model
         """
-        # this information might be useful
-        # here, typically, a state shape is (80, 80, 1)
-        state_shape = list(self.env.observation_space.shape)
 
         ##############################################################
         """
         TODO: add placeholders:
               Remember that we stack 4 consecutive frames together, ending up with an input of shape
-              (80, 80, 4).
+              (timesteps, 13, 4).
                - self.s: batch of states, type = uint8
-                         shape = (batch_size, img height, img width, nchannels x config.state_history)
+                         shape = (batch_size, audio timesteps, audio features, config.state_history)
                - self.a: batch of actions, type = int32
                          shape = (batch_size)
                - self.r: batch of rewards, type = float32
@@ -44,8 +41,9 @@ class AQN(DQN):
         """
         ##############################################################
         ################YOUR CODE HERE (6-15 lines) ##################
-        s_shape = [None, state_shape[0], state_shape[1], state_shape[2] * self.config.state_history]
-        self.s = tf.placeholder(tf.uint8, shape=s_shape, name='s')
+        # ???: We changed this from uint8 to float32 - will this cause issues?
+        s_shape = [None, None, self.config.num_mfcc, self.config.state_history]
+        self.s = tf.placeholder(tf.float32, shape=s_shape, name='s')
 
         a_shape = [None]
         self.a = tf.placeholder(tf.int32, shape=a_shape, name='a')
@@ -53,8 +51,9 @@ class AQN(DQN):
         r_shape = [None]
         self.r = tf.placeholder(tf.float32, shape=r_shape, name='r')
 
-        sp_shape = [None, state_shape[0], state_shape[1], state_shape[2] * self.config.state_history]
-        self.sp = tf.placeholder(tf.uint8, shape=sp_shape, name='sp')
+        # ???: We changed this from uint8 to float32 - will this cause issues?
+        sp_shape = [None, None, self.config.num_mfcc, self.config.state_history]
+        self.sp = tf.placeholder(tf.float32, shape=sp_shape, name='sp')
 
         done_mask_shape = [None]
         self.done_mask = tf.placeholder(tf.bool, shape=done_mask_shape, name='done_mask')
@@ -101,6 +100,24 @@ class AQN(DQN):
         """
         ##############################################################
         ################ YOUR CODE HERE - 10-15 lines ################
+        ### YOUR CODE HERE (~10-15 lines)
+        # Initialize GRU
+        cell = tf.contrib.rnn.GRUCell(self.config.num_hidden)
+        f, last_state = tf.nn.dynamic_rnn(cell, self.inputs_placeholder,
+                                          sequence_length=self.seq_lens_placeholder,
+                                          dtype=tf.float32)
+        with tf.variable_scope(scope):
+            b = tf.get_variable("b", shape=(self.config.num_digits,),
+                                initializer=tf.zeros_initializer())
+            W = tf.get_variable("W", shape=(self.config.num_hidden, self.config.num_digits),
+                                initializer=tf.contrib.layers.xavier_initializer())
+            new_shape = [-1, tf.shape(f)[2]]
+            matmul_and_add = tf.matmul(tf.reshape(f, new_shape), W) + b
+            logits = tf.reshape(matmul_and_add, [-1, tf.shape(f)[1], self.config.num_digits])
+        ### END YOUR CODE
+
+
+
         with tf.variable_scope(scope):
             conv1 = layers.convolution2d(
                 inputs=state,

@@ -1,24 +1,29 @@
-from speech.digits import DigitsSpeaker
+import gym
+from speech.digits import MfccDeriver
 
 
-class MfccFrozenlake(object):
-    def __init__(self, env, raw=False, num_mfcc=13):
-        self._env = env
-        self._digits_speaker = DigitsSpeaker()
-        self.raw = raw
-        self.num_mfcc = num_mfcc
-        self.nA = env.nA
+class MfccFrozenlake(gym.Wrapper):
+    """
+    NOTE: You have to wrap this around an env wrapped in AudioFrozenlake class
+          (see _reset and _step methods for why)
+    """
+    def __init__(self, env, num_mfcc=13):
+        super(MfccFrozenlake, self).__init__(env)
+        self._mfcc_deriver = MfccDeriver(num_mfcc)
 
-    def speak_state(self, state):
-        return self._digits_speaker.speak(str(state), raw=self.raw, mfcc=self.num_mfcc)
+    # Private method
+    def _convert_audio_to_mfccs(self, audio_signal):
+        return self._mfcc_deriver.derive(audio_signal)
 
-    def reset(self):
-        return self.speak_state(0)
+    # Wrapper overload
+    def _reset(self):
+        return self._convert_audio_to_mfccs(self.env.reset())
 
-    def step(self, action):
-        next_state, reward, done, info = self._env.step(action)
-        next_state_features = self.speak_state(next_state)
-        return next_state_features, reward, done, info
+    # Wrapper overload
+    def _step(self, action):
+        next_state_audio, reward, done, info = self.env.step(action)
 
-    def __getattr__(self, name):
-        return getattr(self._env, name)
+        # Convert audio to mfccs
+        next_state_mfccs = self._convert_audio_to_mfccs(next_state_audio)
+
+        return next_state_mfccs, reward, done, info

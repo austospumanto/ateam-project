@@ -46,3 +46,8 @@ class config():
     eps_end            = 0.1
     eps_nsteps         = 1000000
     learning_start     = 50000
+
+    # for mfcc derivation
+    num_mfcc           = 13
+    num_digits         = 12  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
+    num_hidden         = 128
