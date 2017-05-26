@@ -30,7 +30,7 @@ class DigitsRecognizer(object):
 
 
 class DigitsSpeaker(object):
-    def speak(self, state, raw=False):
+    def speak(self, state, raw=False, mfcc=13):
         """
         Convert state (string of digits) to MFCC features/raw audio representation. TTS
 
@@ -44,4 +44,4 @@ class DigitsSpeaker(object):
         signal = f.read_frames(f.nframes)
         if raw:
             return signal
-        return psf.mfcc(signal)
+        return psf.mfcc(signal, numcep=mfcc)
