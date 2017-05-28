@@ -48,7 +48,7 @@ class AQN(DQN):
         s_shape = [None, None, self.config.num_mfcc]
         self.s = tf.placeholder(tf.float32, shape=s_shape, name='s')
 
-        sl_shape = (None)
+        sl_shape = [None]
         self.sl = tf.placeholder(tf.int32, sl_shape, 'sl')
 
         a_shape = [None]
@@ -61,7 +61,7 @@ class AQN(DQN):
         sp_shape = [None, None, self.config.num_mfcc]
         self.sp = tf.placeholder(tf.float32, shape=sp_shape, name='sp')
 
-        slp_shape = (None)
+        slp_shape = [None]
         self.slp = tf.placeholder(tf.int32, slp_shape, 'slp')
 
         done_mask_shape = [None]
@@ -112,32 +112,22 @@ class AQN(DQN):
         ### YOUR CODE HERE (~10-15 lines)
         cell = tf.contrib.rnn.GRUCell(self.config.num_hidden, reuse=reuse)
 
-        # f is of shape [batch_s, max_timesteps, num_hidden]
-        f, last_state = tf.nn.dynamic_rnn(cell, state,
-                                          sequence_length=seq_len,
-                                          dtype=tf.float32)
         with tf.variable_scope(scope):
-            b = tf.get_variable("b", shape=(self.config.num_digits,),
-                                initializer=tf.zeros_initializer())
-            W = tf.get_variable("W", shape=(self.config.num_hidden, self.config.num_digits),
-                                initializer=tf.contrib.layers.xavier_initializer())
-            new_shape = [-1, tf.shape(f)[2]]
-            matmul_and_add = tf.matmul(tf.reshape(f, new_shape), W) + b
-
-            # logits is of shape [batch_s, max_timesteps, num_classes]
-            new_logits_shape = [-1, tf.shape(f)[1], self.config.num_digits]
-            logits = tf.reshape(matmul_and_add, new_logits_shape)
-            logits_flattened = layers.flatten(logits)
+            # f is of shape [batch_s, max_timesteps, num_hidden]
+            f, last_states = tf.nn.dynamic_rnn(cell, state,
+                                               sequence_length=seq_len,
+                                               dtype=tf.float32)
 
             # TODO: Fix this section so the Tensorflow compiler doesn't complain about
             #       the last dimension of logits_flattened being None or replace this section
             #       with something else
-            out = layers.fully_connected(
-                inputs=logits_flattened,
+            logits = layers.fully_connected(
+                inputs=last_states,
                 num_outputs=num_actions,
                 activation_fn=None,
                 reuse=reuse
             )
+        out = logits
         ##############################################################
         ######################## END YOUR CODE #######################
         return out
@@ -179,15 +169,8 @@ class AQN(DQN):
         Returns:
             loss: (Q - Q_target)^2
         """
-        # TODO: Do sequence length padding similar to that in CS224S HW3
-        #       so that all inputs have same shape (.., SAME_NUM_TIMESTAMPS, 13)
-        # ???: Is the above TODO necessary?
-        s_batch, a_batch, r_batch, sp_batch, done_mask_batch = \
+        s_batch, sl_batch, a_batch, r_batch, sp_batch, slp_batch, done_mask_batch = \
             replay_buffer.sample(self.config.batch_size)
-
-        # ???: Should all inputs have same num timestamps?
-        sl_batch = np.array([s.shape[1] for s in s_batch])
-        slp_batch = np.array([sp.shape[1] for sp in sp_batch])
 
         fd = {
             # inputs

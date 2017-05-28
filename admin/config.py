@@ -11,7 +11,7 @@ class ProjectConfig(object):
         self.base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
         # Tensorflow
-        self.tensorboard_logdir = os.environ.get('TENSORBOARD_LOGDIR', os.path.join(self.base_dir, 'tensorboard_logs'))
+        self.tensorboard_logdir = os.environ.get('TENSORBOARD_LOGDIR', os.path.join(self.base_dir, 'results'))
 
 
 def bool_param(name, default):

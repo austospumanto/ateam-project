@@ -62,13 +62,28 @@ class ReplayBuffer(object):
     def _encode_sample(self, idxes):
         # TODO: Figure out if we need to change this function now that we got rid
         #       of the frame history dimension (was 4 for Atari Pong DQN)
-        obs_batch      = np.concatenate([self._encode_observation(idx)[None] for idx in idxes], 0)
-        act_batch      = self.action[idxes]
-        rew_batch      = self.reward[idxes]
-        next_obs_batch = np.concatenate([self._encode_observation(idx + 1)[None] for idx in idxes], 0)
-        done_mask      = np.array([1.0 if self.done[idx] else 0.0 for idx in idxes], dtype=np.float32)
 
-        return obs_batch, act_batch, rew_batch, next_obs_batch, done_mask
+        # Zero pad observations so all observations in the batch have the same
+        # number of timesteps
+        obs_batch, seq_lens_batch = self._make_obs_batch(idxes)
+
+        act_batch = self.action[idxes]
+        rew_batch = self.reward[idxes]
+        next_obs_batch, next_seq_lens_batch = self._make_obs_batch([idx + 1 for idx in idxes])
+        done_mask = np.array([1.0 if self.done[idx] else 0.0 for idx in idxes], dtype=np.float32)
+
+        return obs_batch, seq_lens_batch, act_batch, rew_batch, next_obs_batch, next_seq_lens_batch, done_mask
+
+    def _make_obs_batch(self, idxes):
+        obs_batch = [self._encode_observation(idx) for idx in idxes]
+        seq_lens_batch = [obs.shape[0] for obs in obs_batch]
+        max_obs_tsteps = max(seq_lens_batch)
+        padded_obs_batch = [
+            np.pad(obs, ((0, max_obs_tsteps - obs_tsteps), (0, 0)), 'constant')
+            for obs, obs_tsteps in zip(obs_batch, seq_lens_batch)
+        ]
+        obs_batch = np.concatenate([obs[None] for obs in padded_obs_batch], axis=0)
+        return obs_batch, seq_lens_batch
 
     def sample(self, batch_size):
         """Sample `batch_size` different transitions.
@@ -167,7 +182,7 @@ class ReplayBuffer(object):
             Index at which the frame is stored. To be used for `store_effect` later.
         """
         if self.obs is None:
-            self.obs      = np.empty([self.size] + list(audio.shape), dtype=np.float32)
+            self.obs      = [None] * self.size
             self.action   = np.empty([self.size],                     dtype=np.int32)
             self.reward   = np.empty([self.size],                     dtype=np.float32)
             self.done     = np.empty([self.size],                     dtype=np.bool)

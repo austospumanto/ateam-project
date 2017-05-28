@@ -22,31 +22,31 @@ class config():
     record_path  = output_path + 'monitor/'
 
     # model and training config
-    num_episodes_test = 50
+    num_episodes_test = 100
     grad_clip         = True
     clip_val          = 10
-    saving_freq       = 250000
+    saving_freq       = 25000
     log_freq          = 50
-    eval_freq         = 250000
-    record_freq       = 250000
+    eval_freq         = 1000
+    record_freq       = 1000
     soft_epsilon      = 0.05
 
     # nature paper hyper params
-    nsteps_train       = 5000000
+    nsteps_train       = 50000
     batch_size         = 32
-    buffer_size        = 1000000
-    target_update_freq = 10000
+    buffer_size        = 10000
+    target_update_freq = 1000
     gamma              = 0.99
-    learning_freq      = 4
-    state_history      = 1  # TODO: Might want to change
-    skip_frame         = 4
-    lr_begin           = 0.00025
-    lr_end             = 0.00005
+    learning_freq      = 1
+    state_history      = 1
+    skip_frame         = 1
+    lr_begin           = 0.000025
+    lr_end             = 0.000005
     lr_nsteps          = nsteps_train/2
     eps_begin          = 1
     eps_end            = 0.1
-    eps_nsteps         = 1000000
-    learning_start     = 50000
+    eps_nsteps         = 10000
+    learning_start     = 1000
 
     # for mfcc derivation
     num_mfcc           = 13

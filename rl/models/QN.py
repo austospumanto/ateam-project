@@ -202,8 +202,7 @@ class QN(object):
                                         ("lr", lr_schedule.epsilon)])
 
                 elif (t < self.config.learning_start) and (t % self.config.log_freq == 0):
-                    sys.stdout.write("\rPopulating the memory {}/{}...".format(t, 
-                                                        self.config.learning_start))
+                    sys.stdout.write("\rPopulating the memory {}/{}...".format(t, self.config.learning_start))
                     sys.stdout.flush()
 
                 # count reward
@@ -278,7 +277,10 @@ class QN(object):
         for i in range(num_episodes):
             total_reward = 0
             state = env.reset()
-            while True:
+            max_steps = 100
+            steps_taken = 0
+            while True and steps_taken < max_steps:
+                steps_taken += 1
                 if self.config.render_test:
                     env.render()
 
@@ -317,6 +319,7 @@ class QN(object):
         """
         Re create an env and record a video for one episode
         """
+        return
         env = gym.make(self.config.env_name)
         env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
         env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
