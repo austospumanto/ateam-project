@@ -277,7 +277,7 @@ class QN(object):
         for i in range(num_episodes):
             total_reward = 0
             state = env.reset()
-            max_steps = 100
+            max_steps = 10
             steps_taken = 0
             while True and steps_taken < max_steps:
                 steps_taken += 1

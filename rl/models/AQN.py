@@ -110,27 +110,31 @@ class AQN(DQN):
         ##############################################################
         ################ YOUR CODE HERE - 10-15 lines ################
         ### YOUR CODE HERE (~10-15 lines)
-        cell = tf.contrib.rnn.GRUCell(self.config.num_hidden, reuse=reuse)
+        cells = [
+            tf.contrib.rnn.GRUCell(self.config.num_hidden, reuse=reuse)
+            for _ in range(self.config.num_layers)
+        ]
+        multi_layer_cell = tf.contrib.rnn.MultiRNNCell(cells, state_is_tuple=False)
 
         with tf.variable_scope(scope):
             # f is of shape [batch_s, max_timesteps, num_hidden]
-            f, last_states = tf.nn.dynamic_rnn(cell, state,
-                                               sequence_length=seq_len,
-                                               dtype=tf.float32)
+            rnn_outputs, last_states = tf.nn.dynamic_rnn(
+                multi_layer_cell, state,
+                sequence_length=seq_len,
+                dtype=tf.float32
+            )
 
-            # TODO: Fix this section so the Tensorflow compiler doesn't complain about
-            #       the last dimension of logits_flattened being None or replace this section
-            #       with something else
             logits = layers.fully_connected(
                 inputs=last_states,
                 num_outputs=num_actions,
                 activation_fn=None,
                 reuse=reuse
             )
-        out = logits
+        if self.config.clip_q:
+            logits = tf.clip_by_value(logits, 0.0, 1.0)
         ##############################################################
         ######################## END YOUR CODE #######################
-        return out
+        return logits
 
     def build(self):
         """

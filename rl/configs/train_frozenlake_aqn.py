@@ -13,8 +13,7 @@ class config():
 
     # output config
     output_path  = os.path.join(
-        project_config.base_dir,
-        'results/train_frozenlake_aqn/'
+        project_config.base_dir, 'results/train_frozenlake_aqn/'
     )
     model_output = output_path + 'model.weights/'
     log_path     = output_path + 'log.txt'
@@ -22,7 +21,7 @@ class config():
     record_path  = output_path + 'monitor/'
 
     # model and training config
-    num_episodes_test = 100
+    num_episodes_test = 50
     grad_clip         = True
     clip_val          = 10
     saving_freq       = 25000
@@ -30,18 +29,19 @@ class config():
     eval_freq         = 1000
     record_freq       = 1000
     soft_epsilon      = 0.05
+    clip_q            = False
 
     # nature paper hyper params
     nsteps_train       = 50000
     batch_size         = 32
     buffer_size        = 10000
     target_update_freq = 1000
-    gamma              = 0.99
+    gamma              = 0.95
     learning_freq      = 1
     state_history      = 1
     skip_frame         = 1
-    lr_begin           = 0.000025
-    lr_end             = 0.000005
+    lr_begin           = 0.00025
+    lr_end             = 0.00005
     lr_nsteps          = nsteps_train/2
     eps_begin          = 1
     eps_end            = 0.1
@@ -51,4 +51,7 @@ class config():
     # for mfcc derivation
     num_mfcc           = 13
     num_digits         = 12  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
-    num_hidden         = 128
+
+    # for the Neural Net
+    num_hidden         = 64
+    num_layers         = 3
