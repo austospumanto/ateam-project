@@ -6,12 +6,12 @@ __all__ = ['project_config']
 
 class ProjectConfig(object):
     def __init__(self, *args, **kw):
-        self.project_root = os.path.dirname(__file__)
+        self.project_root = os.path.dirname(os.path.dirname(__file__))
         self.LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
-        self.base_dir = os.path.abspath(os.path.dirname(__file__))
+        self.base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
         # Tensorflow
-        self.tensorboard_logdir = os.environ.get('TENSORBOARD_LOGDIR', os.path.join(self.base_dir, 'tensorboard_logs'))
+        self.tensorboard_logdir = os.environ.get('TENSORBOARD_LOGDIR', os.path.join(self.base_dir, 'results'))
 
 
 def bool_param(name, default):

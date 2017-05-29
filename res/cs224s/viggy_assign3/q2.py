@@ -56,7 +56,7 @@ class CTCModel():
         targets_placeholder: Sparse placeholder, type tf.int32. You don't need to specify shape dimension.
         seq_lens_placeholder: Sequence length placeholder tensor of shape (None), type tf.int32
 
-        TODO: Add these placeholders to self as the instance variables
+        TODO: Add thse placeholders to self as the instance variables
             self.inputs_placeholder
             self.targets_placeholder
             self.seq_lens_placeholder
@@ -134,6 +134,8 @@ class CTCModel():
         ### YOUR CODE HERE (~10-15 lines)
         # Initialize GRU
         cell = tf.contrib.rnn.GRUCell(Config.num_hidden)
+
+        # f is of shape [batch_s, max_timesteps, num_hidden]
         f, last_state = tf.nn.dynamic_rnn(cell, self.inputs_placeholder,
                                           sequence_length=self.seq_lens_placeholder,
                                           dtype=tf.float32)
@@ -142,10 +144,11 @@ class CTCModel():
                                 initializer=tf.zeros_initializer())
             W = tf.get_variable("W", shape=(Config.num_hidden, Config.num_classes),
                                 initializer=tf.contrib.layers.xavier_initializer())
-            f_shape = tf.shape(f)
-            new_shape = [-1, f_shape[2]]
+            new_shape = [-1, tf.shape(f)[2]]
             matmul_and_add = tf.matmul(tf.reshape(f, new_shape), W) + b
-            logits = tf.reshape(matmul_and_add, [-1, f_shape[1], Config.num_classes])
+
+            # logits is of shape [batch_s, max_timesteps, num_classes]
+            logits = tf.reshape(matmul_and_add, [-1, tf.shape(f)[1], Config.num_classes])
         ### END YOUR CODE
 
         self.logits = logits

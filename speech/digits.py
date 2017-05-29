@@ -1,10 +1,8 @@
 import numpy as np
-import librosa
 import python_speech_features as psf
 from speech.model_utils import label_from_sparse_tensor
 from data.tidigits import get_audio_file_path
 import scikits.audiolab
-
 
 
 class DigitsRecognizer(object):
@@ -30,7 +28,7 @@ class DigitsRecognizer(object):
 
 
 class DigitsSpeaker(object):
-    def speak(self, state, raw=False):
+    def speak(self, state):
         """
         Convert state (string of digits) to MFCC features/raw audio representation. TTS
 
@@ -38,10 +36,16 @@ class DigitsSpeaker(object):
         :param raw: If False, we are using MFCC features.
         :return:
         """
+        state = state if isinstance(state, str) else str(state)
         audio_file_path = get_audio_file_path(state)
-        # (signal, sample_rate) = librosa.load(audio_file_path)
         f = scikits.audiolab.Sndfile(audio_file_path, 'r')
-        signal = f.read_frames(f.nframes)
-        if raw:
-            return signal
-        return psf.mfcc(signal)
+        audio_signal = f.read_frames(f.nframes)
+        return audio_signal
+
+
+class MfccDeriver(object):
+    def __init__(self, num_mfcc=13):
+        self._num_mfcc = num_mfcc
+
+    def derive(self, audio_signal):
+        return psf.mfcc(audio_signal, numcep=self._num_mfcc)

@@ -19,17 +19,19 @@ import fire
 
 from rl import Q
 from data import process_tidigits
+from rl import train_frozenlake_aqn
+from envs.lake_envs import *
 
 
 class Ateam(object):
     def vanilla_example(self):
         Q.vanilla_example()
 
-    def base_asr_example(self):
-        Q.pretrained_asr_example()
-
     def shallow_q_network(self):
         Q.shallow_q_network()
+
+    def shallow_q_network_with_asr(self):
+        Q.shallow_q_network_with_asr()
 
     def process_tidigits(self):
         process_tidigits.process_data()
@@ -39,6 +41,9 @@ class Ateam(object):
 
     def test_with_asr(self):
         Q.test_with_asr()
+
+    def train_frozenlake_aqn(self):
+        train_frozenlake_aqn.main()
 
 
 fire.Fire(Ateam)
