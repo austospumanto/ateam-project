@@ -28,7 +28,7 @@ class config():
     log_freq          = 50
     eval_freq         = 1000
     record_freq       = 1000
-    soft_epsilon      = 0.05
+    soft_epsilon      = 0.00  # Set this to 0 so no random actions during testing
     clip_q            = False
 
     # nature paper hyper params

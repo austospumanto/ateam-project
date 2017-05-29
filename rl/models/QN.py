@@ -275,14 +275,19 @@ class QN(object):
         rewards = []
 
         for i in range(num_episodes):
-            total_reward = 0
+            total_reward = 0.0
             state = env.reset()
-            max_steps = 10
+            info = None
+            max_steps = 50
             steps_taken = 0
             while True and steps_taken < max_steps:
                 steps_taken += 1
                 if self.config.render_test:
                     env.render()
+
+                if info:
+                    policy_s = self.policy(state)
+                    self.logger.info('For state=%d, policy is %d' % (info['state'], policy_s))
 
                 # store last state in buffer
                 idx     = replay_buffer.store_audio(state)
