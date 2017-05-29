@@ -278,16 +278,16 @@ class QN(object):
             total_reward = 0.0
             state = env.reset()
             info = None
-            max_steps = 50
+            a_to_d = ['left', 'down', 'right', 'up']
             steps_taken = 0
-            while True and steps_taken < max_steps:
-                steps_taken += 1
+            while True and steps_taken < self.config.max_steps_test:
                 if self.config.render_test:
                     env.render()
 
-                if info:
-                    policy_s = self.policy(state)
-                    self.logger.info('For state=%d, policy is %d' % (info['state'], policy_s))
+                if info or steps_taken == 0:
+                    actual_state = 0 if steps_taken == 0 else info['state']
+                    policy_s = a_to_d[int(self.policy(state))]
+                    self.logger.info('steps_taken=%d   state=%d   policy=%s' % (steps_taken, actual_state, policy_s))
 
                 # store last state in buffer
                 idx     = replay_buffer.store_audio(state)
@@ -301,10 +301,13 @@ class QN(object):
                 # store in replay memory
                 replay_buffer.store_effect(idx, action, reward, done)
                 state = new_state
+                steps_taken += 1
 
                 # count reward
                 total_reward += reward
                 if done:
+                    wl = 'WIN' if reward > 0 else 'LOSS'
+                    self.logger.info('steps_taken=%d %s' % (steps_taken, wl))
                     break
 
             # updates to perform at the end of an episode
@@ -314,7 +317,7 @@ class QN(object):
         sigma_reward = np.sqrt(np.var(rewards) / len(rewards))
 
         if num_episodes > 1:
-            msg = "Average reward: {:04.2f} +/- {:04.2f}".format(avg_reward, sigma_reward)
+            msg = "Average reward: {:04.3f} +/- {:04.3f}".format(avg_reward, sigma_reward)
             self.logger.info(msg)
 
         return avg_reward

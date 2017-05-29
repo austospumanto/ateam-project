@@ -6,7 +6,7 @@ class config():
     # env config
     render_train     = False
     render_test      = False
-    env_name         = 'Deterministic-4x4-FrozenLake-v0'
+    env_name         = 'Stochastic-4x4-FrozenLake-v0'
     overwrite_render = True
     record           = True
     high             = 255.
@@ -21,10 +21,11 @@ class config():
     record_path  = output_path + 'monitor/'
 
     # model and training config
-    num_episodes_test = 50
+    num_episodes_test = 100
+    max_steps_test    = 100
     grad_clip         = True
     clip_val          = 10
-    saving_freq       = 25000
+    saving_freq       = 5000
     log_freq          = 50
     eval_freq         = 1000
     record_freq       = 1000
@@ -32,10 +33,10 @@ class config():
     clip_q            = False
 
     # nature paper hyper params
-    nsteps_train       = 50000
+    nsteps_train       = 75000
     batch_size         = 32
     buffer_size        = 10000
-    target_update_freq = 1000
+    target_update_freq = 100
     gamma              = 0.95
     learning_freq      = 1
     state_history      = 1
