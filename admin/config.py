@@ -9,6 +9,8 @@ class ProjectConfig(object):
         self.project_root = os.path.dirname(os.path.dirname(__file__))
         self.LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
         self.base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        self.rl_dir = os.path.join(self.base_dir, 'rl')
+        self.models_dir = os.path.join(self.rl_dir, 'models')
 
         # Tensorflow
         self.tensorboard_logdir = os.environ.get('TENSORBOARD_LOGDIR', os.path.join(self.base_dir, 'results'))

@@ -1,4 +1,5 @@
 import os
+import shutil
 import numpy as np
 import tensorflow as tf
 
@@ -236,6 +237,18 @@ class DQN(QN):
         Assumes the graph has been constructed
         Creates a tf Session and run initializer of variables
         """
+        # Dumps all configuration to self.config.config_path
+        with open(self.config.config_path, 'wb') as configfile:
+            # Dump config and current copy of AQN.py to disk
+            for key, value in self.config.__dict__.iteritems():
+                if not key.startswith('__') and not key.endswith('__'):
+                    configfile.write('%s=%s\n' % (str(key), str(value)))
+        
+        # Saves a copy of *QN.py at the time of run to self.config_*qn_dst_path
+        shutil.copy2(self.config.qn_src_path, self.config.qn_dst_path)
+        shutil.copy2(self.config.dqn_src_path, self.config.dqn_dst_path)
+        shutil.copy2(self.config.aqn_src_path, self.config.aqn_dst_path)
+
         # create tf session
         self.sess = tf.Session()
 
