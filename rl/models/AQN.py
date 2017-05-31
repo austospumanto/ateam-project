@@ -111,34 +111,37 @@ class AQN(DQN):
         ################ YOUR CODE HERE - 10-15 lines ################
         ### YOUR CODE HERE (~10-15 lines)
         cells = [
-            tf.contrib.rnn.GRUCell(self.config.num_hidden, reuse=reuse)
-            for _ in range(self.config.num_layers)
+            tf.contrib.rnn.GRUCell(self.config.n_hidden_rnn, reuse=reuse)
+            for _ in range(self.config.n_layers_rnn)
         ]
         multi_layer_cell = tf.contrib.rnn.MultiRNNCell(cells, state_is_tuple=False)
 
         with tf.variable_scope(scope):
             # f is of shape [batch_s, max_timesteps, num_hidden]
             rnn_outputs, last_states = tf.nn.dynamic_rnn(
-                multi_layer_cell, state,
+                multi_layer_cell,
+                state,
                 sequence_length=seq_len,
                 dtype=tf.float32
             )
 
-            # fc = layers.fully_connected(
-            #     inputs=last_states,
-            #     num_outputs=self.config.num_digits * 2,
-            #     activation_fn=tf.nn.relu,
-            #     reuse=reuse
-            # )
+            fc = layers.fully_connected(
+                inputs=last_states,
+                num_outputs=self.config.n_hidden_fc,
+                activation_fn=tf.nn.relu,
+                reuse=reuse,
+                weights_initializer=layers.variance_scaling_initializer()
+            )
 
             logits = layers.fully_connected(
-                inputs=last_states,
+                inputs=fc,
                 num_outputs=num_actions,
                 activation_fn=None,
-                reuse=reuse
+                reuse=reuse,
+                weights_initializer=layers.variance_scaling_initializer()
             )
-        if self.config.clip_q:
-            logits = tf.clip_by_value(logits, 0.0, 1.0)
+        # if self.config.clip_q:
+        #     logits = tf.clip_by_value(logits, 0.0, 1.0)
         ##############################################################
         ######################## END YOUR CODE #######################
         return logits
