@@ -31,38 +31,38 @@ class config(object):
         self.aqn_dst_path = os.path.join(self.output_path, 'AQN.py')
 
         # model and training config
-        num_episodes_test = 20
-        max_steps_test    = 200
-        grad_clip         = True
-        clip_val          = 10
-        saving_freq       = 5000
-        log_freq          = 50
-        eval_freq         = 1000
-        record_freq       = 1000
-        soft_epsilon      = 0.00  # Set this to 0 so no random actions during testing
-        clip_q            = False
+        self.num_episodes_test = 20
+        self.max_steps_test    = 200
+        self.grad_clip         = True
+        self.clip_val          = 10
+        self.saving_freq       = 5000
+        self.log_freq          = 50
+        self.eval_freq         = 1000
+        self.record_freq       = 1000
+        self.soft_epsilon      = 0.00  # Set this to 0 so no random actions during testing
+        self.clip_q            = False
 
         # nature paper hyper params
-        nsteps_train       = 200000
-        batch_size         = 64
-        buffer_size        = 10000
-        target_update_freq = 100
-        gamma              = 0.98
-        learning_freq      = 1
-        state_history      = 1
-        skip_frame         = 1
-        lr_begin           = 0.00025
-        lr_end             = 0.00001
-        lr_nsteps          = nsteps_train/2
-        eps_begin          = 1
-        eps_end            = 0.1
-        eps_nsteps         = 10000
-        learning_start     = 1000
+        self.nsteps_train       = 200000
+        self.batch_size         = 64
+        self.buffer_size        = 10000
+        self.target_update_freq = 100
+        self.gamma              = 0.98
+        self.learning_freq      = 1
+        self.state_history      = 1
+        self.skip_frame         = 1
+        self.lr_begin           = 0.00025
+        self.lr_end             = 0.00001
+        self.lr_nsteps          = self.nsteps_train/2
+        self.eps_begin          = 1
+        self.eps_end            = 0.1
+        self.eps_nsteps         = 10000
+        self.learning_start     = 1000
 
         # for mfcc derivation
-        num_mfcc           = 13
-        num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
+        self.num_mfcc           = 13
+        self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        num_hidden         = 64
-        num_layers         = 1
+        self.num_hidden         = 64
+        self.num_layers         = 1
