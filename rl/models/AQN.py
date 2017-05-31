@@ -124,6 +124,13 @@ class AQN(DQN):
                 dtype=tf.float32
             )
 
+            # fc = layers.fully_connected(
+            #     inputs=last_states,
+            #     num_outputs=self.config.num_digits * 2,
+            #     activation_fn=tf.nn.relu,
+            #     reuse=reuse
+            # )
+
             logits = layers.fully_connected(
                 inputs=last_states,
                 num_outputs=num_actions,
