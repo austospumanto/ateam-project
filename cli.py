@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import random
 import dotenv
 import logging
 
@@ -19,6 +20,7 @@ import fire
 
 from rl import Q
 from data import process_tidigits
+from data import tidigits
 from rl import train_frozenlake_aqn
 from envs.lake_envs import *
 
@@ -36,6 +38,9 @@ class Ateam(object):
     def process_tidigits(self):
         process_tidigits.process_data()
 
+    def get_split_dataset(self):
+        tidigits.get_split_dataset()
+
     def train_and_test_with_asr(self):
         Q.train_and_test_with_asr()
 
@@ -45,4 +50,6 @@ class Ateam(object):
     def train_frozenlake_aqn(self, run_name):
         train_frozenlake_aqn.main(run_name)
 
-fire.Fire(Ateam)
+if __name__ == "__main__":
+    random.seed(42)
+    fire.Fire(Ateam)

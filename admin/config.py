@@ -11,6 +11,7 @@ class ProjectConfig(object):
         self.base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
         self.rl_dir = os.path.join(self.base_dir, 'rl')
         self.models_dir = os.path.join(self.rl_dir, 'models')
+        self.val_ratio = 0.2
 
         # Tensorflow
         self.tensorboard_logdir = os.environ.get('TENSORBOARD_LOGDIR', os.path.join(self.base_dir, 'results'))
