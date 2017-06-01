@@ -3,13 +3,14 @@ import gym
 
 
 class AudioFrozenlake(gym.Wrapper):
-    def __init__(self, env):
+    def __init__(self, env, usage='train'):
         super(AudioFrozenlake, self).__init__(env)
         self._digits_speaker = DigitsSpeaker()
+        self._usage = usage;
 
     # Private method
     def _speak_state(self, state):
-        return self._digits_speaker.speak(state)
+        return self._digits_speaker.speak(state, usage=self._usage)
 
     # Wrapper overload
     def _reset(self):

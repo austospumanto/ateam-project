@@ -28,7 +28,7 @@ class DigitsRecognizer(object):
 
 
 class DigitsSpeaker(object):
-    def speak(self, state):
+    def speak(self, state, usage='train'):
         """
         Convert state (string of digits) to MFCC features/raw audio representation. TTS
 
@@ -37,7 +37,7 @@ class DigitsSpeaker(object):
         :return:
         """
         state = state if isinstance(state, str) else str(state)
-        audio_file_path = get_audio_file_path(state)
+        audio_file_path = get_audio_file_path(state, usage=usage)
         f = scikits.audiolab.Sndfile(audio_file_path, 'r')
         audio_signal = f.read_frames(f.nframes)
         return audio_signal

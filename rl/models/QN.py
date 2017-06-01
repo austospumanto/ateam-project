@@ -13,7 +13,7 @@ class QN(object):
     """
     Abstract Class for implementing a Q Network
     """
-    def __init__(self, env, config, logger=None):
+    def __init__(self, config, train_env, test_env=None, logger=None):
         """
         Initialize Q Network and env
 
@@ -30,7 +30,8 @@ class QN(object):
         self.logger = logger
         if logger is None:
             self.logger = get_logger(config.log_path, logger_name=__name__)
-        self.env = env
+        self.train_env = train_env
+        self.test_env = test_env if test_env else train_env
 
         # build model
         self.build()
@@ -82,7 +83,7 @@ class QN(object):
             state: observation from gym
         """
         if np.random.random() < self.config.soft_epsilon:
-            return self.env.action_space.sample()
+            return self.train_env.action_space.sample()
         else:
             return self.get_best_action(state)[0]
 
@@ -159,13 +160,13 @@ class QN(object):
         # interact with environment
         while t < self.config.nsteps_train:
             total_reward = 0
-            state = self.env.reset()
+            state = self.train_env.reset()
             while True:
                 t += 1
                 last_eval += 1
                 last_record += 1
                 if self.config.render_train:
-                    self.env.render()
+                    self.train_env.render()
 
                 # replay memory stuff
                 idx      = replay_buffer.store_audio(state)
@@ -180,7 +181,7 @@ class QN(object):
                 q_values += list(q_values)
 
                 # perform action in env
-                new_state, reward, done, info = self.env.step(action)
+                new_state, reward, done, info = self.train_env.step(action)
 
                 # store the transition
                 replay_buffer.store_effect(idx, action, reward, done)
@@ -268,7 +269,7 @@ class QN(object):
             num_episodes = self.config.num_episodes_test
 
         if env is None:
-            env = self.env
+            env = self.train_env
 
         # replay memory to play
         replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)

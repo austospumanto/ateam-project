@@ -75,7 +75,7 @@ class DQN(QN):
             target_q: (tf tensor) shape = (batch_size, num_actions)
         """
         # you may need this variable
-        num_actions = self.env.action_space.n
+        num_actions = self.train_env.action_space.n
 
         ##############################################################
         """

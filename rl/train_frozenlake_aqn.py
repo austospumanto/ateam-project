@@ -29,17 +29,20 @@ def main(run_name):
     # Initialize configuration
     run_config = config(run_name)
 
-    # make env
-    env = gym.make(run_config.env_name)
-    env = AudioFrozenlake(env)
-    env = MfccFrozenlake(env, num_mfcc=run_config.num_mfcc)
+    # make train and test envs
+    train_env = gym.make(run_config.env_name)
+    train_env = AudioFrozenlake(train_env)
+    train_env = MfccFrozenlake(train_env, num_mfcc=run_config.num_mfcc)
+    test_env = gym.make(run_config.env_name)
+    test_env = AudioFrozenlake(test_env, usage='test')
+    test_env = MfccFrozenlake(test_env, num_mfcc=run_config.num_mfcc)
 
     # exploration strategy
-    exp_schedule = LinearExploration(env, run_config.eps_begin, run_config.eps_end, run_config.eps_nsteps)
+    exp_schedule = LinearExploration(train_env, run_config.eps_begin, run_config.eps_end, run_config.eps_nsteps) 
 
     # learning rate schedule
     lr_schedule = LinearSchedule(run_config.lr_begin, run_config.lr_end, run_config.lr_nsteps)
 
     # train model
-    model = AQN(env, run_config)
+    model = AQN(run_config, train_env, test_env=test_env)
     model.run(exp_schedule, lr_schedule)

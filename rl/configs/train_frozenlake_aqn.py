@@ -44,10 +44,10 @@ class config(object):
 
         # nature paper hyper params
         self.nsteps_train       = 2000000
-        self.batch_size         = 64
+        self.batch_size         = 128
         self.buffer_size        = 10000
         self.target_update_freq = 25
-        self.gamma              = 0.98
+        self.gamma              = 0.96
         self.learning_freq      = 1
         self.state_history      = 1
         self.skip_frame         = 1
@@ -64,6 +64,6 @@ class config(object):
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 32
+        self.n_hidden_rnn       = 48
         self.n_hidden_fc        = 64
         self.n_layers_rnn         = 2
