@@ -9,6 +9,7 @@ def process_data(sequence_len=2):
     c = conn.cursor()
     # Create table
     c.execute('create table tidigits (\
+               id integer primary key,\
                speaker_id text,\
                speaker_type text,\
                usage text,\
@@ -28,9 +29,10 @@ def process_data(sequence_len=2):
                 digits = stripped_filename[:-1] # z1z36
                 production = stripped_filename[-1] # a or b
                 if len(digits) == sequence_len:
-                    insert_tuple = (speaker_id, speaker_type, usage, production, digits, path)
+                    # Let primary key take care of ID
+                    insert_tuple = (None, speaker_id, speaker_type, usage, production, digits, path)
                     print insert_tuple
-                    c.execute('insert into tidigits values (?, ?, ?, ?, ?, ?);', insert_tuple)
+                    c.execute('insert into tidigits values (?, ?, ?, ?, ?, ?, ?);', insert_tuple)
                     conn.commit()
     print 'DONE!'
     conn.close()
