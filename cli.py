@@ -42,8 +42,7 @@ class Ateam(object):
     def test_with_asr(self):
         Q.test_with_asr()
 
-    def train_frozenlake_aqn(self):
-        train_frozenlake_aqn.main()
-
+    def train_frozenlake_aqn(self, run_name):
+        train_frozenlake_aqn.main(run_name)
 
 fire.Fire(Ateam)

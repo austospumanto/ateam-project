@@ -25,21 +25,21 @@ address-ip-of-the-server:6006
 """
 
 
-def main():
+def main(run_name):
+    # Initialize configuration
+    run_config = config(run_name)
+
     # make env
-    env = gym.make(config.env_name)
+    env = gym.make(run_config.env_name)
     env = AudioFrozenlake(env)
-    env = MfccFrozenlake(env, num_mfcc=config.num_mfcc)
+    env = MfccFrozenlake(env, num_mfcc=run_config.num_mfcc)
 
     # exploration strategy
-    exp_schedule = LinearExploration(env, config.eps_begin, config.eps_end, config.eps_nsteps)
+    exp_schedule = LinearExploration(env, run_config.eps_begin, run_config.eps_end, run_config.eps_nsteps)
 
     # learning rate schedule
-    lr_schedule = LinearSchedule(config.lr_begin, config.lr_end, config.lr_nsteps)
+    lr_schedule = LinearSchedule(run_config.lr_begin, run_config.lr_end, run_config.lr_nsteps)
 
     # train model
-    model = AQN(env, config)
+    model = AQN(env, run_config)
     model.run(exp_schedule, lr_schedule)
-
-if __name__ == '__main__':
-    main()
