@@ -3,6 +3,7 @@ import random
 import gym
 import time
 import matplotlib as mpl
+import collections
 
 mpl.use('TkAgg')
 
@@ -39,22 +40,22 @@ def _get_start_policy(policy):
         }
     elif policy == 2:
         start_policy = {
-            0: 2,
-            1: 2,
+            0: 3,
+            1: 3,
             2: 1,
-            3: 0,
-            4: 3,
-            5: 2,
-            6: 1,
+            3: 3,
+            4: 0,
+            5: 0,
+            6: 0,
             7: 0,
-            8: 2,
-            9: 2,
-            10: 1,
+            8: 3,
+            9: 1,
+            10: 0,
             11: 0,
-            12: 2,
+            12: 0,
             13: 2,
-            14: 2,
-            15: 2
+            14: 1,
+            15: 0
         }
     else:
         start_policy = {
@@ -78,48 +79,48 @@ def _get_start_policy(policy):
     return start_policy
 
 
-def _monte_carlo_eval(env, start_policy, wer):
-    V = np.zeros((env.nS))
+def _monte_carlo_eval(env, start_policy, wer, eps=0.0, gamma=1.0):
+    V = np.zeros(env.nS)
     average_R = 0.0
     average_steps = 0.0
     policy = _get_start_policy(start_policy)
-    states_seen = []
-
-    num_seen = {}
-    for i in range(env.nS):
-        num_seen[i] = 0
+    num_seen = np.zeros(env.nS)
 
     for _ in tqdm(range(num_iters)):
         done = False
-        steps = 0
+        steps = 0.0
         episode_reward = 0.0
-        states_seen[:] = []
         state = env.reset()
-        states_seen.append(state)
+        steps_state_seen = collections.defaultdict(list)
+        steps_state_seen[state].append(0)
 
         while not done:
-            action = 0
-
+            # Simulate incorrect state prediction
             if random.random() < wer:
+                # Choose from valid states
+                guessed_state = random.choice([0, 1, 2, 3, 4, 6, 8, 9, 10, 13, 14])
+            else:
+                guessed_state = state
+
+            # Simulate epsilon greedy action
+            if random.random() < eps:
                 action = random.randint(0, env.nA - 1)
             else:
-                action = policy[state]
+                action = policy[guessed_state]
 
             new_state, reward, done, _ = env.step(action)
             episode_reward += reward
-            steps += 1
-
-            if new_state not in states_seen:
-                states_seen.append(new_state)
-
+            steps += 1.0
             state = new_state
 
-        for j in range(len(states_seen)):
-            num_seen[states_seen[j]] += 1
-            old_return = V[states_seen[j]]
-            new_return = old_return * (num_seen[states_seen[j]] - 1) + episode_reward
-            new_return /= num_seen[states_seen[j]]
-            V[states_seen[j]] = new_return
+            if state not in steps_state_seen:
+                steps_state_seen[state].append(steps)
+
+        for s, steps_seen in steps_state_seen.items():
+            num_seen[s] += 1.0
+            steps_to_reward = steps - np.average(steps_seen)
+            discounted_reward = (gamma ** (steps_to_reward - 1)) * episode_reward
+            V[s] = (V[s] * (num_seen[s] - 1) + discounted_reward) / num_seen[s]
 
         average_R += episode_reward
         average_steps += steps
@@ -139,6 +140,13 @@ def grid_print(V):
 
 def main(start_policy):
     env = gym.make('Stochastic-4x4-FrozenLake-v0')
+
+    # V, average_R, average_steps = _monte_carlo_eval(env, start_policy, 0.006, eps=0.0, gamma=1.0)
+    # grid_print(V)
+    # print 'average_R=%f' % average_R
+    # print 'average_steps=%f' % average_steps
+    # exit()
+
     wer_list = np.linspace(0.0, 0.03, num=20)
     Q_max_list = np.zeros(20)
     average_R_list = np.zeros(20)

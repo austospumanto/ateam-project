@@ -297,9 +297,9 @@ def part4c():
         # print(env.__doc__)
         # print("Here is an example of state, action, reward, and next state")
         # example(env)
-
-        V_vi, p_vi = value_iteration(env.P, env.nS, env.nA, gamma=0.9, max_iteration=80, tol=1e-3)
-        V_pi, p_pi = policy_iteration(env.P, env.nS, env.nA, gamma=0.9, max_iteration=80, tol=1e-3)
+        gamma = 0.8
+        V_vi, p_vi = value_iteration(env.P, env.nS, env.nA, gamma=gamma, max_iteration=300, tol=1e-5)
+        V_pi, p_pi = policy_iteration(env.P, env.nS, env.nA, gamma=gamma, max_iteration=300, tol=1e-5)
 
         print('Environment: "%s"' % env_name)
         print('------------------------------')
