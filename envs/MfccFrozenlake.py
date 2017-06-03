@@ -25,10 +25,13 @@ class MfccFrozenlake(gym.Wrapper):
 
     # Wrapper overload
     def _step(self, action):
-        next_state_audio, reward, done, info = self.env.step(action)
+        next_state, reward, done, info = self.env.step(action)
+
+        # So we have a way to access the ground truth state
+        info['state'] = next_state
 
         # Convert audio to mfccs
-        next_state_mfccs = self._speak_state_as_mfccs(next_state_audio)
+        next_state_mfccs = self._speak_state_as_mfccs(next_state)
 
         return next_state_mfccs, reward, done, info
 

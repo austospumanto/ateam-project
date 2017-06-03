@@ -54,7 +54,7 @@ class DigitsSampleCollection(object):
         self.digits_to_samples = collections.defaultdict(list)
         for sample_id in digits_sample_ids:
             digits_audio_sample = DigitsSample(sample_id)
-            self.digits_to_samples[digits_audio_sample.digits] = digits_audio_sample
+            self.digits_to_samples[digits_audio_sample.digits].append(digits_audio_sample)
         self.digits_to_samples = dict(self.digits_to_samples)
 
     def get_samples(self, digits=None, desired_length=2):
@@ -62,7 +62,7 @@ class DigitsSampleCollection(object):
             _clean_digits = clean_digits(digits, desired_length)
             return self.digits_to_samples[_clean_digits]
         else:
-            return itertools.chain.from_iterable(self.digits_to_samples.values())
+            return list(itertools.chain.from_iterable(self.digits_to_samples.values()))
 
     def choose_random_sample(self, digits=None, desired_length=2):
         samples = self.get_samples(digits, desired_length)

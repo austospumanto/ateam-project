@@ -3,12 +3,13 @@ import os
 
 from admin.config import project_config
 
+
 class config(object):
     def __init__(self, run_name):
         # env config
         self.render_train     = False
         self.render_test      = False
-        self.env_name         = 'Stochastic-4x4-FrozenLake-v0'
+        self.env_name         = 'Deterministic-4x4-FrozenLake-v0'
         self.overwrite_render = True
         self.record           = True
         self.high             = 255.
@@ -32,7 +33,7 @@ class config(object):
 
         # model and training config
         self.num_episodes_test = 40
-        self.max_steps_test    = 300
+        self.max_steps_test    = 100
         self.grad_clip         = True
         self.clip_val          = 5
         self.saving_freq       = 5000
@@ -44,10 +45,10 @@ class config(object):
 
         # nature paper hyper params
         self.nsteps_train       = 2000000
-        self.batch_size         = 128
+        self.batch_size         = 32
         self.buffer_size        = 10000
         self.target_update_freq = 25
-        self.gamma              = 0.96
+        self.gamma              = 0.95
         self.learning_freq      = 1
         self.state_history      = 1
         self.skip_frame         = 1
@@ -64,6 +65,6 @@ class config(object):
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 48
-        self.n_hidden_fc        = 64
-        self.n_layers_rnn         = 2
+        self.n_hidden_rnn       = 32
+        self.n_hidden_fc        = 16
+        self.n_layers_rnn         = 1
