@@ -13,7 +13,7 @@ class QN(object):
     """
     Abstract Class for implementing a Q Network
     """
-    def __init__(self, config, train_env, test_env=None, logger=None):
+    def __init__(self, config, train_env, val_env, logger=None):
         """
         Initialize Q Network and env
 
@@ -31,7 +31,7 @@ class QN(object):
         if logger is None:
             self.logger = get_logger(config.log_path, logger_name=__name__)
         self.train_env = train_env
-        self.test_env = test_env if test_env else train_env
+        self.val_env = val_env
 
         # build model
         self.build()
@@ -49,12 +49,13 @@ class QN(object):
         """
         return lambda state: self.get_action(state)
 
-    def save(self):
+    def save(self, global_step=None):
         """
         Save model parameters
 
         Args:
             model_path: (string) directory
+            global_step: (int) training step we're at
         """
         pass
 
@@ -252,7 +253,7 @@ class QN(object):
             
         # occasionaly save the weights
         if t % self.config.saving_freq == 0:
-            self.save()
+            self.save(global_step=t)
 
         return loss_eval, grad_eval
 
@@ -269,7 +270,7 @@ class QN(object):
             num_episodes = self.config.num_episodes_test
 
         if env is None:
-            env = self.train_env
+            env = self.val_env
 
         # replay memory to play
         replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)
@@ -329,12 +330,12 @@ class QN(object):
         Re create an env and record a video for one episode
         """
         return
-        env = gym.make(self.config.env_name)
-        env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
-        env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
-        env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1), 
-                            overwrite_render=self.config.overwrite_render)
-        self.evaluate(env, 1)
+        # env = gym.make(self.config.env_name)
+        # env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
+        # env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
+        # env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
+        #                     overwrite_render=self.config.overwrite_render)
+        # self.evaluate(env, 1)
 
     def run(self, exp_schedule, lr_schedule):
         """

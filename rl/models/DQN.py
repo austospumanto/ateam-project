@@ -299,14 +299,14 @@ class DQN(QN):
         self.merged = tf.summary.merge_all()
         self.file_writer = tf.summary.FileWriter(self.config.output_path, self.sess.graph)
 
-    def save(self):
+    def save(self, global_step=None):
         """
         Saves session
         """
         if not os.path.exists(self.config.model_output):
             os.makedirs(self.config.model_output)
 
-        self.saver.save(self.sess, self.config.model_output)
+        self.saver.save(self.sess, self.config.model_output, global_step=global_step)
 
     def get_best_action(self, state):
         """

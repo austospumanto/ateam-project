@@ -1,29 +1,42 @@
 import gym
-from speech.digits import MfccDeriver
+from data import tidigits
+from data.tidigits import DigitsSampleCollection
 
 
 class MfccFrozenlake(gym.Wrapper):
     """
-    NOTE: You have to wrap this around an env wrapped in AudioFrozenlake class
-          (see _reset and _step methods for why)
+    NOTE: Wrap this env around a raw FrozenLake-v0 type env
     """
-    def __init__(self, env, num_mfcc=13):
+    def __init__(self, env, audio_sample_ids, usage, num_mfcc=13):
         super(MfccFrozenlake, self).__init__(env)
-        self._mfcc_deriver = MfccDeriver(num_mfcc)
+        self.num_mfcc = num_mfcc
+        self._audio_sample_ids = audio_sample_ids
+        self.digits_sample_collection = DigitsSampleCollection(audio_sample_ids)
+        self.usage = usage
 
     # Private method
-    def _convert_audio_to_mfccs(self, audio_signal):
-        return self._mfcc_deriver.derive(audio_signal)
+    def _speak_state_as_mfccs(self, state):
+        digits_sample = self.digits_sample_collection.choose_random_sample(state)
+        return digits_sample.to_mfccs(self.num_mfcc)
 
     # Wrapper overload
     def _reset(self):
-        return self._convert_audio_to_mfccs(self.env.reset())
+        return self._speak_state_as_mfccs(self.env.reset())
 
     # Wrapper overload
     def _step(self, action):
         next_state_audio, reward, done, info = self.env.step(action)
 
         # Convert audio to mfccs
-        next_state_mfccs = self._convert_audio_to_mfccs(next_state_audio)
+        next_state_mfccs = self._speak_state_as_mfccs(next_state_audio)
 
         return next_state_mfccs, reward, done, info
+
+    @classmethod
+    def make_train_val_test_envs(cls, base_env_name, data_splits=None, num_mfcc=13):
+        data_splits = data_splits or tidigits.get_split_dataset()
+        train_env, val_env, test_env = [
+            MfccFrozenlake(gym.make(base_env_name), data_splits[usage], usage, num_mfcc=num_mfcc)
+            for usage in ('train', 'test', 'val')
+        ]
+        return train_env, val_env, test_env

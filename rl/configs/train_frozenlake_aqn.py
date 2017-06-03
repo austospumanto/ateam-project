@@ -18,7 +18,7 @@ class config(object):
         self.output_path  = os.path.join(
             project_config.base_dir, 'results', self.run_dir
         )
-        self.model_output = os.path.join(self.output_path, 'model.weights/')
+        self.model_output_path = os.path.join(self.output_path, 'model.weights/')
         self.log_path     = os.path.join(self.output_path, 'log.txt')
         self.plot_output  = os.path.join(self.output_path, 'scores.png')
         self.record_path  = os.path.join(self.output_path, 'monitor/')
