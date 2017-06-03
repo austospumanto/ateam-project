@@ -36,7 +36,7 @@ class config(object):
         self.max_steps_test    = 100
         self.grad_clip         = True
         self.clip_val          = 5
-        self.saving_freq       = 5000
+        self.saving_freq       = 2500
         self.log_freq          = 50
         self.eval_freq         = 1000
         self.record_freq       = 1000
@@ -57,7 +57,7 @@ class config(object):
         self.lr_nsteps          = self.nsteps_train/2
         self.eps_begin          = 1.0
         self.eps_end            = 0.05
-        self.eps_nsteps         = 20000
+        self.eps_nsteps         = 10000
         self.learning_start     = 1000
 
         # for mfcc derivation
@@ -65,6 +65,6 @@ class config(object):
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 32
+        self.n_hidden_rnn       = 64
         self.n_hidden_fc        = 16
         self.n_layers_rnn         = 1
