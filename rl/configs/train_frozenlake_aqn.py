@@ -49,7 +49,7 @@ class config(object):
         self.nsteps_train       = 1000000
         self.batch_size         = 128
         self.buffer_size        = 10000
-        self.target_update_freq = 25
+        self.target_update_freq = 50
         self.gamma              = 0.95
         self.learning_freq      = 4
         self.state_history      = 1
@@ -68,6 +68,14 @@ class config(object):
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 128
-        self.n_hidden_fc        = 64
-        self.n_layers_rnn         = 1
+        self.n_hidden_rnn       = 64
+        self.n_hidden_fc        = 32
+        self.n_layers_rnn       = 1
+        self.rnn_cell_type      = 'gru'
+        self.dropout_input_keep_prob = 1.0
+        self.dropout_output_keep_prob = 0.8
+        self.recurrent_dropout_keep_prob = 0.8
+        self.l2_lambda = 1e-12
+
+        # other
+        self.random_seed        = 42

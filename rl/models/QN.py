@@ -42,12 +42,11 @@ class QN(object):
         """
         pass
 
-    @property
-    def policy(self):
+    def policy(self, state, is_training):
         """
         model.policy(state) = action
         """
-        return lambda state: self.get_action(state)
+        return self.get_action(state, is_training)
 
     def save(self, global_step=None):
         """
@@ -65,7 +64,7 @@ class QN(object):
         """
         pass
 
-    def get_best_action(self, state):
+    def get_best_action(self, state, is_training):
         """
         Returns best action according to the network
     
@@ -76,7 +75,7 @@ class QN(object):
         """
         raise NotImplementedError
 
-    def get_action(self, state):
+    def get_action(self, state, is_training):
         """
         Returns action with some epsilon strategy
 
@@ -84,9 +83,9 @@ class QN(object):
             state: observation from gym
         """
         if np.random.random() < self.config.soft_epsilon:
-            return self.train_env.action_space.sample()
+            return self.val_env.action_space.sample()
         else:
-            return self.get_best_action(state)[0]
+            return self.get_best_action(state, is_training)[0]
 
     def update_target_params(self):
         """
@@ -174,7 +173,7 @@ class QN(object):
                 q_input = replay_buffer.encode_recent_observation()
 
                 # chose action according to current Q and exploration
-                best_action, q_values = self.get_best_action(q_input)
+                best_action, q_values = self.get_best_action(q_input, is_training=True)
                 action                = exp_schedule.get_action(best_action)
 
                 # store q values
@@ -288,14 +287,17 @@ class QN(object):
 
                 if info or steps_taken == 0:
                     actual_state = 0 if steps_taken == 0 else info['state']
-                    policy_s = a_to_d[int(self.policy(state))]
+                    policy_i = int(self.policy(state, is_training=False))
+                    if policy_i >= len(a_to_d):
+                        print 'oh no'
+                    policy_s = a_to_d[policy_i]
                     self.logger.info('steps_taken=%d   state=%d   policy=%s' % (steps_taken, actual_state, policy_s))
 
                 # store last state in buffer
                 idx     = replay_buffer.store_audio(state)
                 q_input = replay_buffer.encode_recent_observation()
 
-                action = self.get_action(q_input)
+                action = self.get_action(q_input, is_training=False)
 
                 # perform action in env
                 new_state, reward, done, info = env.step(action)

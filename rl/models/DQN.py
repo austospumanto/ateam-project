@@ -320,7 +320,7 @@ class DQN(QN):
 
         self.saver.save(self.sess, self.config.model_output_path, global_step=global_step)
 
-    def get_best_action(self, state):
+    def get_best_action(self, state, is_training):
         """
         Return best action (used during testing/evaluation)
 

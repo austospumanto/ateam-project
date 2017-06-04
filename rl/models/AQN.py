@@ -69,10 +69,12 @@ class AQN(DQN):
 
         lr_shape = []
         self.lr = tf.placeholder(tf.float32, shape=lr_shape, name='lr')
+
+        self.is_training = tf.placeholder(tf.bool, name='is_training')
         ##############################################################
         ######################## END YOUR CODE #######################
 
-    def get_q_values_op(self, state, seq_len, scope, reuse=False):
+    def get_q_values_op(self, state, seq_len, is_training, scope, reuse=False):
         """
         Returns Q values for all actions
 
@@ -110,31 +112,102 @@ class AQN(DQN):
         ##############################################################
         ################ YOUR CODE HERE - 10-15 lines ################
         ### YOUR CODE HERE (~10-15 lines)
-        cells = [
-            tf.contrib.rnn.GRUCell(self.config.n_hidden_rnn, reuse=reuse)
-            for _ in range(self.config.n_layers_rnn)
-        ]
-        multi_layer_cell = tf.contrib.rnn.MultiRNNCell(cells, state_is_tuple=False)
 
         with tf.variable_scope(scope):
-            # f is of shape [batch_s, max_timesteps, num_hidden]
-            rnn_outputs, last_states = tf.nn.dynamic_rnn(
-                multi_layer_cell,
-                state,
-                sequence_length=seq_len,
-                dtype=tf.float32
-            )
+            def rnn_dropout(_cell, output_keep_prob=None):
+                return tf.contrib.rnn.DropoutWrapper(
+                    _cell,
+                    input_keep_prob=self.config.dropout_input_keep_prob,
+                    output_keep_prob=(output_keep_prob or self.config.dropout_output_keep_prob),
+                    seed=self.config.random_seed
+                )
 
+            def rnn_input_dropout(_cell):
+                return rnn_dropout(_cell, output_keep_prob=1.0)
+
+            # For when we want to only apply dropout to the inputs
+            def dropout(_cell):
+                return tf.nn.dropout(
+                    _cell,
+                    keep_prob=self.config.dropout_output_keep_prob,
+                    seed=self.config.random_seed
+                )
+
+            # Make rnn cells
+            if self.config.rnn_cell_type == 'gru':
+                # GRU
+                rnn_cells = [
+                    tf.contrib.rnn.GRUCell(self.config.n_hidden_rnn, reuse=reuse)
+                    for _ in range(self.config.n_layers_rnn)
+                ]
+                # TODO: Just make seperate ops for train/val so we don't have
+                #       to deal with this tf.cond BS that keeps erroring...
+                # rnn_cells = [
+                #     tf.cond(is_training,
+                #             lambda: rnn_dropout(cell),
+                #             lambda: cell)
+                #     for cell in rnn_cells]
+                state_is_tuple = False
+            else:
+                # LSTM
+                # Don't do recurrent dropout if val'ing/test'ing
+                # TODO: Just make seperate ops for train/val so we don't have
+                #       to deal with this tf.cond BS that keeps erroring...
+                recurrent_keep_prob = tf.cond(is_training,
+                                              lambda: tf.constant(self.config.recurrent_dropout_keep_prob),
+                                              lambda: tf.constant(1.0))
+
+                # LSTMs with built-in layer-norm (like batch-norm) and recurrent-dropout (like dropout)
+                rnn_cells = [
+                    tf.contrib.rnn.LayerNormBasicLSTMCell(
+                        self.config.n_hidden_rnn,
+                        dropout_keep_prob=recurrent_keep_prob,
+                        dropout_prob_seed=self.config.random_seed,
+                        reuse=reuse
+                    )
+                    for _ in range(self.config.n_layers_rnn)
+                ]
+                # TODO: Just make seperate ops for train/val so we don't have
+                #       to deal with this tf.cond BS that keeps erroring...
+                # # (only need to dropout the inputs b/c
+                # # the LayerNormBasicLSTMCell dropsout the outputs)
+                # rnn_cells = [tf.cond(is_training, lambda: rnn_input_dropout(cell), lambda: cell)
+                #              for cell in rnn_cells]
+                state_is_tuple = True
+
+            if self.config.n_layers_rnn > 1:
+                rnn_stuff = tf.contrib.rnn.MultiRNNCell(rnn_cells, state_is_tuple=state_is_tuple)
+            else:
+                rnn_stuff = rnn_cells[0]
+            rnn_outputs, last_states = tf.nn.dynamic_rnn(rnn_stuff, state, sequence_length=seq_len, dtype=tf.float32)
+            if state_is_tuple:
+                assert len(last_states) == self.config.n_layers_rnn
+                last_states = tf.concat(last_states[0], axis=1)
+
+            # Penultimate layer is a fully connected layer with batch-norm, activation,
+            # and dropout
             if self.config.n_hidden_fc:
                 fc = layers.fully_connected(
                     inputs=last_states,
                     num_outputs=self.config.n_hidden_fc,
-                    activation_fn=tf.nn.relu,
+                    activation_fn=None,
                     reuse=reuse,
                     weights_initializer=layers.variance_scaling_initializer()
                 )
-
-            logits_input = fc if self.config.n_hidden_fc else last_states
+                fc = tf.contrib.layers.batch_norm(
+                    fc,
+                    center=True,
+                    scale=True,
+                    is_training=is_training,
+                    reuse=reuse
+                )
+                fc = tf.nn.elu(fc)
+                # TODO: Just make seperate ops for train/val so we don't have
+                #       to deal with this tf.cond BS that keeps erroring...
+                fc = tf.cond(is_training, lambda: dropout(fc), lambda: fc)
+                logits_input = fc
+            else:
+                logits_input = last_states
 
             logits = layers.fully_connected(
                 inputs=logits_input,
@@ -143,8 +216,6 @@ class AQN(DQN):
                 reuse=reuse,
                 weights_initializer=layers.variance_scaling_initializer()
             )
-        # if self.config.clip_q:
-        #     logits = tf.clip_by_value(logits, 0.0, 1.0)
         ##############################################################
         ######################## END YOUR CODE #######################
         return logits
@@ -156,15 +227,17 @@ class AQN(DQN):
         # add placeholders
         self.add_placeholders_op()
 
+        is_training = self.is_training
+
         # compute Q values of state
         s = self.s  # self.process_state(self.s)
         sl = self.sl
-        self.q = self.get_q_values_op(s, sl, scope="q", reuse=False)
+        self.q = self.get_q_values_op(s, sl, is_training, scope="q", reuse=False)
 
         # compute Q values of next state
         sp = self.sp  # self.process_state(self.sp)
         slp = self.slp
-        self.target_q = self.get_q_values_op(sp, slp, scope="target_q", reuse=False)
+        self.target_q = self.get_q_values_op(sp, slp, is_training, scope="target_q", reuse=False)
 
         # add update operator for target network
         self.add_update_target_op("q", "target_q")
@@ -199,6 +272,7 @@ class AQN(DQN):
             self.slp: slp_batch,
             self.done_mask: done_mask_batch,
             self.lr: lr,
+            self.is_training: True,
             # extra info
             self.avg_reward_placeholder: self.avg_reward,
             self.max_reward_placeholder: self.max_reward,
@@ -218,17 +292,23 @@ class AQN(DQN):
 
         return loss_eval, grad_norm_eval
 
-    def get_best_action(self, state):
+    def get_best_action(self, state, is_training):
         """
         Return best action (used during testing/evaluation)
 
         Args:
             state: 4 consecutive observations from gym
+            is_training: (bool) whether we're in the training phase
         Returns:
             action: (int)
             action_values: (np array) q values for all actions
         """
         # Feed in a batch of size 1 to get a single best action for this state
         seq_len = state.shape[0]
-        action_values = self.sess.run(self.q, feed_dict={self.s: [state], self.sl: [seq_len]})[0]
+        feed_dict = {
+            self.s: [state],
+            self.sl: [seq_len],
+            self.is_training: is_training
+        }
+        action_values = self.sess.run(self.q, feed_dict=feed_dict)[0]
         return np.argmax(action_values), action_values
