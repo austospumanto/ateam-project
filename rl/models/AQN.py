@@ -118,7 +118,8 @@ class AQN(DQN):
                 return tf.contrib.rnn.DropoutWrapper(
                     _cell,
                     input_keep_prob=self.config.dropout_input_keep_prob,
-                    output_keep_prob=(output_keep_prob or self.config.dropout_output_keep_prob),
+                    output_keep_prob=(output_keep_prob or
+                                      self.config.dropout_output_keep_prob),
                     seed=self.config.random_seed
                 )
 
@@ -201,7 +202,8 @@ class AQN(DQN):
                 fc = tf.nn.elu(fc)
                 # TODO: Just make seperate ops for train/val so we don't have
                 #       to deal with this tf.cond BS that keeps erroring...
-                fc = tf.cond(is_training, lambda: dropout(fc), lambda: fc)
+                if self.config.dropout_output_keep_prob < 1.0 or self.config.dropout_input_keep_prob < 1.0:
+                    fc = tf.cond(is_training, lambda: dropout(fc), lambda: fc)
                 logits_input = fc
             else:
                 logits_input = last_states
