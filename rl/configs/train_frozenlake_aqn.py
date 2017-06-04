@@ -47,7 +47,7 @@ class config(object):
         self.nsteps_train       = 2000000
         self.batch_size         = 256
         self.buffer_size        = 10000
-        self.target_update_freq = 100
+        self.target_update_freq = 25
         self.gamma              = 0.95
         self.learning_freq      = 4
         self.state_history      = 1
@@ -72,7 +72,7 @@ class config(object):
         self.dropout_input_keep_prob = 1.0
         self.dropout_output_keep_prob = 1.0
         self.recurrent_dropout_keep_prob = 1.0
-        self.l2_lambda = 1e-8
+        self.l2_lambda = 1e-12
 
         # other
         self.random_seed        = 42

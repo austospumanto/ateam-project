@@ -114,25 +114,25 @@ class AQN(DQN):
         ### YOUR CODE HERE (~10-15 lines)
 
         with tf.variable_scope(scope):
-            def rnn_dropout(_cell, output_keep_prob=None):
-                return tf.contrib.rnn.DropoutWrapper(
-                    _cell,
-                    input_keep_prob=self.config.dropout_input_keep_prob,
-                    output_keep_prob=(output_keep_prob or
-                                      self.config.dropout_output_keep_prob),
-                    seed=self.config.random_seed
-                )
-
-            def rnn_input_dropout(_cell):
-                return rnn_dropout(_cell, output_keep_prob=1.0)
-
-            # For when we want to only apply dropout to the inputs
-            def dropout(_cell):
-                return tf.nn.dropout(
-                    _cell,
-                    keep_prob=self.config.dropout_output_keep_prob,
-                    seed=self.config.random_seed
-                )
+            # def rnn_dropout(_cell, output_keep_prob=None):
+            #     return tf.contrib.rnn.DropoutWrapper(
+            #         _cell,
+            #         input_keep_prob=self.config.dropout_input_keep_prob,
+            #         output_keep_prob=(output_keep_prob or
+            #                           self.config.dropout_output_keep_prob),
+            #         seed=self.config.random_seed
+            #     )
+            #
+            # def rnn_input_dropout(_cell):
+            #     return rnn_dropout(_cell, output_keep_prob=1.0)
+            #
+            # # For when we want to only apply dropout to the inputs
+            # def dropout(_cell):
+            #     return tf.nn.dropout(
+            #         _cell,
+            #         keep_prob=self.config.dropout_output_keep_prob,
+            #         seed=self.config.random_seed
+            #     )
 
             # Make rnn cells
             if self.config.rnn_cell_type == 'gru':
@@ -149,38 +149,38 @@ class AQN(DQN):
                 #             lambda: cell)
                 #     for cell in rnn_cells]
                 state_is_tuple = False
-            else:
-                # LSTM
-                # Don't do recurrent dropout if val'ing/test'ing
-                # TODO: Just make seperate ops for train/val so we don't have
-                #       to deal with this tf.cond BS that keeps erroring...
-                recurrent_keep_prob = tf.cond(is_training,
-                                              lambda: tf.constant(self.config.recurrent_dropout_keep_prob),
-                                              lambda: tf.constant(1.0))
-
-                # LSTMs with built-in layer-norm (like batch-norm) and recurrent-dropout (like dropout)
-                rnn_cells = [
-                    tf.contrib.rnn.LayerNormBasicLSTMCell(
-                        self.config.n_hidden_rnn,
-                        dropout_keep_prob=recurrent_keep_prob,
-                        dropout_prob_seed=self.config.random_seed,
-                        reuse=reuse
-                    )
-                    for _ in range(self.config.n_layers_rnn)
-                ]
-                # TODO: Just make seperate ops for train/val so we don't have
-                #       to deal with this tf.cond BS that keeps erroring...
-                # # (only need to dropout the inputs b/c
-                # # the LayerNormBasicLSTMCell dropsout the outputs)
-                # rnn_cells = [tf.cond(is_training, lambda: rnn_input_dropout(cell), lambda: cell)
-                #              for cell in rnn_cells]
-                state_is_tuple = True
+            # else:
+            #     # LSTM
+            #     # Don't do recurrent dropout if val'ing/test'ing
+            #     # TODO: Just make seperate ops for train/val so we don't have
+            #     #       to deal with this tf.cond BS that keeps erroring...
+            #     recurrent_keep_prob = tf.cond(is_training,
+            #                                   lambda: tf.constant(self.config.recurrent_dropout_keep_prob),
+            #                                   lambda: tf.constant(1.0))
+            #
+            #     # LSTMs with built-in layer-norm (like batch-norm) and recurrent-dropout (like dropout)
+            #     rnn_cells = [
+            #         tf.contrib.rnn.LayerNormBasicLSTMCell(
+            #             self.config.n_hidden_rnn,
+            #             dropout_keep_prob=recurrent_keep_prob,
+            #             dropout_prob_seed=self.config.random_seed,
+            #             reuse=reuse
+            #         )
+            #         for _ in range(self.config.n_layers_rnn)
+            #     ]
+            #     # TODO: Just make seperate ops for train/val so we don't have
+            #     #       to deal with this tf.cond BS that keeps erroring...
+            #     # # (only need to dropout the inputs b/c
+            #     # # the LayerNormBasicLSTMCell dropsout the outputs)
+            #     # rnn_cells = [tf.cond(is_training, lambda: rnn_input_dropout(cell), lambda: cell)
+            #     #              for cell in rnn_cells]
+            #     state_is_tuple = True
 
             rnn_stuff = tf.contrib.rnn.MultiRNNCell(rnn_cells, state_is_tuple=state_is_tuple)
             rnn_outputs, last_states = tf.nn.dynamic_rnn(rnn_stuff, state, sequence_length=seq_len, dtype=tf.float32)
-            if state_is_tuple:
-                assert len(last_states) == self.config.n_layers_rnn
-                last_states = tf.concat(last_states[0], axis=1)
+            # if state_is_tuple:
+            #     assert len(last_states) == self.config.n_layers_rnn
+            #     last_states = tf.concat(last_states[0], axis=1)
 
             # Penultimate layer is a fully connected layer with batch-norm, activation,
             # and dropout
@@ -188,22 +188,22 @@ class AQN(DQN):
                 fc = layers.fully_connected(
                     inputs=last_states,
                     num_outputs=self.config.n_hidden_fc,
-                    activation_fn=None,
+                    activation_fn=tf.nn.relu,
                     reuse=reuse,
                     weights_initializer=layers.variance_scaling_initializer()
                 )
-                fc = tf.contrib.layers.batch_norm(
-                    fc,
-                    center=True,
-                    scale=True,
-                    is_training=is_training,
-                    reuse=reuse
-                )
-                fc = tf.nn.elu(fc)
+                # fc = tf.contrib.layers.batch_norm(
+                #     fc,
+                #     center=True,
+                #     scale=True,
+                #     is_training=is_training,
+                #     reuse=reuse
+                # )
+                # fc = tf.nn.elu(fc)
                 # TODO: Just make seperate ops for train/val so we don't have
                 #       to deal with this tf.cond BS that keeps erroring...
-                if self.config.dropout_output_keep_prob < 1.0 or self.config.dropout_input_keep_prob < 1.0:
-                    fc = tf.cond(is_training, lambda: dropout(fc), lambda: fc)
+                # if self.config.dropout_output_keep_prob < 1.0 or self.config.dropout_input_keep_prob < 1.0:
+                #     fc = tf.cond(is_training, lambda: dropout(fc), lambda: fc)
                 logits_input = fc
             else:
                 logits_input = last_states
