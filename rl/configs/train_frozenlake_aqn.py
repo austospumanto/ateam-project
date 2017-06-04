@@ -47,9 +47,9 @@ class config(object):
         self.nsteps_train       = 2000000
         self.batch_size         = 256
         self.buffer_size        = 10000
-        self.target_update_freq = 25
+        self.target_update_freq = 20
         self.gamma              = 0.95
-        self.learning_freq      = 4
+        self.learning_freq      = 2
         self.state_history      = 1
         self.skip_frame         = 1
         self.lr_begin           = 0.00025
