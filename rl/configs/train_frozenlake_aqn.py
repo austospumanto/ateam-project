@@ -32,47 +32,47 @@ class config(object):
         self.aqn_dst_path = os.path.join(self.output_path, 'AQN.py')
 
         # model and training config
-        self.num_episodes_test = 100
-        self.max_steps_test    = 100
+        self.num_episodes_test = 30
+        self.max_steps_test    = 30
         self.grad_clip         = True
         self.clip_val          = 10
         self.saving_freq       = 2500
-        self.log_freq          = 50
-        self.eval_freq         = 500
+        self.log_freq          = 100
+        self.eval_freq         = 1000
         self.record_freq       = 1000
         self.soft_epsilon      = 0.00  # Set this to 0 so no random actions during testing
         self.clip_q            = False
 
         # nature paper hyper params
         self.nsteps_train       = 2000000
-        self.batch_size         = 64
+        self.batch_size         = 256
         self.buffer_size        = 10000
-        self.target_update_freq = 50
+        self.target_update_freq = 100
         self.gamma              = 0.95
-        self.learning_freq      = 1
+        self.learning_freq      = 4
         self.state_history      = 1
         self.skip_frame         = 1
         self.lr_begin           = 0.00025
-        self.lr_end             = 0.000005
+        self.lr_end             = 0.000001
         self.lr_nsteps          = self.nsteps_train/2
         self.eps_begin          = 1.0
         self.eps_end            = 0.1
-        self.eps_nsteps         = 5000
-        self.learning_start     = 500
+        self.eps_nsteps         = 10000
+        self.learning_start     = 1000
 
         # for mfcc derivation
         self.num_mfcc           = 13
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 64
-        self.n_hidden_fc        = 32
+        self.n_hidden_rnn       = 128
+        self.n_hidden_fc        = 64
         self.n_layers_rnn       = 1
         self.rnn_cell_type      = 'gru'
         self.dropout_input_keep_prob = 1.0
-        self.dropout_output_keep_prob = 0.8
-        self.recurrent_dropout_keep_prob = 0.8
-        self.l2_lambda = 0.000000001
+        self.dropout_output_keep_prob = 1.0
+        self.recurrent_dropout_keep_prob = 1.0
+        self.l2_lambda = 1e-8
 
         # other
         self.random_seed        = 42
