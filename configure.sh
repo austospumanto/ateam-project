@@ -3,7 +3,7 @@
 
 # Update packages
 sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get upgrade -y
 
 # Install build-essential
 sudo apt-get install build-essential -y

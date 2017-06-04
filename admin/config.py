@@ -12,6 +12,7 @@ class ProjectConfig(object):
         self.rl_dir = os.path.join(self.base_dir, 'rl')
         self.models_dir = os.path.join(self.rl_dir, 'models')
         self.val_ratio = 0.2
+        self.audio_clip_mode = 'standard' # oneof('standard', 'synthesized')
 
         # Tensorflow
         self.tensorboard_logdir = os.environ.get('TENSORBOARD_LOGDIR', os.path.join(self.base_dir, 'results'))

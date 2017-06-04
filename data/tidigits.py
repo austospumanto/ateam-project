@@ -18,6 +18,19 @@ CDS = ['CD4_1_1', 'CD4_2_1', 'CD4_3_1']
 conn = sqlite3.connect(DB_NAME)
 conn.row_factory = sqlite3.Row
 
+class DigitsSynthesizedSample(object):
+    def __init__(self, samples):
+        self.samples = samples
+        for sample in self.samples:
+            raw_audio = scikits.audiolab.Sndfile(sample.path, 'r')
+            if not self.audio:
+                self.audio = raw_audio.read_frames()
+            else:
+                self.audio = np.concatenate((self.audio, raw_audio.read_frames()))
+
+    def to_mfccs(self, num_mfcc=13):
+        sample_mfcc_tup = tuple(sample.to_mfccs(num_mfcc=num_mfcc) for sample in self.samples)
+        return np.concatenate((sample_mfcc_tup))
 
 class DigitsSample(object):
     def __init__(self, sample_id):
@@ -65,8 +78,15 @@ class DigitsSampleCollection(object):
             return list(itertools.chain.from_iterable(self.digits_to_samples.values()))
 
     def choose_random_sample(self, digits=None, desired_length=2):
-        samples = self.get_samples(digits, desired_length)
-        return random.choice(samples)
+        if project_config.audio_clip_mode == 'standard':
+            samples = self.get_samples(digits, desired_length)
+            return random.choice(samples)
+        elif project_config.audio_clip_mode == 'synthesized':
+            samples = []
+            for digit in clean_digits(digits, desired_length):
+                options = self.get_samples(digit, desired_length=1)
+                samples.append(random.choice(options))
+            return DigitsSynthesizedSample(samples)
 
 
 def get_digits_audio_sample_row_by_id(sample_id):
