@@ -175,10 +175,7 @@ class AQN(DQN):
                 #              for cell in rnn_cells]
                 state_is_tuple = True
 
-            if self.config.n_layers_rnn > 1:
-                rnn_stuff = tf.contrib.rnn.MultiRNNCell(rnn_cells, state_is_tuple=state_is_tuple)
-            else:
-                rnn_stuff = rnn_cells[0]
+            rnn_stuff = tf.contrib.rnn.MultiRNNCell(rnn_cells, state_is_tuple=state_is_tuple)
             rnn_outputs, last_states = tf.nn.dynamic_rnn(rnn_stuff, state, sequence_length=seq_len, dtype=tf.float32)
             if state_is_tuple:
                 assert len(last_states) == self.config.n_layers_rnn
