@@ -133,10 +133,10 @@ def get_split_dataset():
     # Part 1 - fetch test_ids directly from database (where usage = 'test')
     test_rows = fetchall_for_query((
         "select id, digits from tidigits where usage = 'test' and \
-         (digits like ? or digits = ? or digits = ? or digits = ? \
-         digits like ? or digits = ? or digits = ? or digits = ? \
-         digits like ? or digits = ? or digits = ? or digits = ? \
-         digits like ? or digits = ? or digits = ? or digits = ? \
+         (digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
          or digits = ?);",
         ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9',
          'z%', '1z', '11', '12', '13', '14', '15')
@@ -146,10 +146,10 @@ def get_split_dataset():
     # Part 2a - get all non-test data from database (where usage = 'train')
     train_rows = fetchall_for_query((
         "select id, digits from tidigits where usage = 'train' and \
-         (digits like ? or digits = ? or digits = ? or digits = ? \
-         digits like ? or digits = ? or digits = ? or digits = ? \
-         digits like ? or digits = ? or digits = ? or digits = ? \
-         digits like ? or digits = ? or digits = ? or digits = ? \
+         (digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
          or digits = ?);",
         ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9',
          'z%', '1z', '11', '12', '13', '14', '15')
