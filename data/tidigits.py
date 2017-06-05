@@ -137,7 +137,7 @@ def get_split_dataset():
          digits like ? or digits = ? or digits = ? or digits = ? or \
          digits like ? or digits = ? or digits = ? or digits = ? or \
          digits like ? or digits = ? or digits = ? or digits = ? or \
-         or digits = ?);",
+         digits = ?);",
         ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9',
          'z%', '1z', '11', '12', '13', '14', '15')
     ))
@@ -150,7 +150,7 @@ def get_split_dataset():
          digits like ? or digits = ? or digits = ? or digits = ? or \
          digits like ? or digits = ? or digits = ? or digits = ? or \
          digits like ? or digits = ? or digits = ? or digits = ? or \
-         or digits = ?);",
+         digits = ?);",
         ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9',
          'z%', '1z', '11', '12', '13', '14', '15')
     ))
