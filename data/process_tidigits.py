@@ -28,7 +28,7 @@ def process_data(sequence_len=2):
                 stripped_filename = filename[:-4]  # strip out .wav extension
                 digits = stripped_filename[:-1]  # z1z36
                 production = stripped_filename[-1]  # a or b
-                if len(digits) == sequence_len:
+                if len(digits) <= sequence_len:
                     # Let primary key take care of ID
                     insert_tuple = (None, speaker_id, speaker_type, usage, production, digits, path)
                     print insert_tuple
