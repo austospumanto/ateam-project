@@ -49,6 +49,6 @@ class MfccFrozenlake(gym.Wrapper):
         train_env, val_env, test_env = [
             MfccFrozenlake(gym.make(base_env_name), data_splits[usage], usage, num_mfcc=num_mfcc,
                            use_synthesized=use_synthesized)
-            for usage in ('train', 'test', 'val')
+            for usage in ('train', 'val', 'test')
         ]
         return train_env, val_env, test_env
