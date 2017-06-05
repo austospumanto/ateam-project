@@ -67,7 +67,6 @@ class TidigitsDatabase(object):
         elif usage == 'train':
             template_filler = "usage = 'train' and "
         fl_digits_query = self.fl_digits_query_template % template_filler
-        logger.info(fl_digits_query)
         return self.fetchall((
             fl_digits_query,
             self.fl_digits_query_args
@@ -147,9 +146,10 @@ class TidigitsDatabase(object):
 
         # Part 2a - get all non-test data from database (where usage = 'train')
         train_rows = self.fetch_fl_digits(usage='train')
+        train_rows.sort(key=lambda r: r['id'])
         logger.info('Num usage=\'train\' rows: %d' % len(train_rows))
 
-        logger.info('Classes: %r' % list(set((r['digits'] for r in train_rows))))
+        logger.info('Frozenlake digits "classes" collected: %r' % list(set((r['digits'] for r in train_rows))))
 
         # Part 2b - split non-test data into train and val splits, based on speaker_type
         speaker_info = [row['digits'] for row in train_rows]
@@ -164,11 +164,13 @@ class TidigitsDatabase(object):
         # Part 3 - assert that we split correctly
         assert len(set(train_ids) & set(val_ids) & set(test_ids)) == 0
         assert len(train_ids) + len(val_ids) + len(test_ids) == total_num_fl_samples
-        return {
+        data_split = {
             'train': train_ids,
             'val': val_ids,
             'test': test_ids
         }
+        logger.info('Data split stats: ' + str({k: len(v) for k, v in data_split.items()}))
+        return data_split
 
     # DEPRECATED
     # ----------
@@ -211,6 +213,7 @@ class TidigitsDatabase(object):
 
 def clean_digits(desired_digits, desired_length):
     desired_digits = str(desired_digits)
+    assert len(desired_digits) <= desired_length
     # Must have desired length, or else we prepend zeros
     if len(desired_digits) != desired_length:
         prepend = 'z' * (desired_length - len(desired_digits))

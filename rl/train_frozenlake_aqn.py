@@ -1,7 +1,11 @@
+from admin.config import project_config
 from configs.train_frozenlake_aqn import config
 from envs.MfccFrozenlake import MfccFrozenlake
 from rl.models.AQN import AQN
 from rl.utils.schedule import LinearExploration, LinearSchedule
+import logging
+
+logger = logging.getLogger(__name__)
 
 """
 Use deep Q network for the Atari game. Please report the final result.
@@ -25,8 +29,13 @@ def main(run_name):
     # Initialize configuration
     run_config = config(run_name)
 
-    train_env, val_env, _ = MfccFrozenlake.make_train_val_test_envs(
-        run_config.env_name, num_mfcc=run_config.num_mfcc)
+    train_env, val_env, test_env = MfccFrozenlake.make_train_val_test_envs(
+        run_config.env_name, num_mfcc=run_config.num_mfcc,
+        use_synthesized=project_config.audio_clip_mode)
+
+    logger.info('Train env has %d raw samples' % train_env.n_samples)
+    logger.info('Val env has %d raw samples' % val_env.n_samples)
+    logger.info('Test env has %d raw samples' % test_env.n_samples)
 
     # exploration strategy
     exp_schedule = LinearExploration(train_env, run_config.eps_begin, run_config.eps_end, run_config.eps_nsteps) 

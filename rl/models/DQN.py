@@ -248,6 +248,7 @@ class DQN(QN):
         shutil.copy2(self.config.qn_src_path, self.config.qn_dst_path)
         shutil.copy2(self.config.dqn_src_path, self.config.dqn_dst_path)
         shutil.copy2(self.config.aqn_src_path, self.config.aqn_dst_path)
+        shutil.copy2(self.config.project_cfg_src_path, self.config.project_cfg_dst_path)
 
         # create tf session
         self.sess = tf.Session()

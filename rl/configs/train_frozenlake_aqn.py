@@ -23,13 +23,15 @@ class config(object):
         self.log_path     = os.path.join(self.output_path, 'log.txt')
         self.plot_output  = os.path.join(self.output_path, 'scores.png')
         self.record_path  = os.path.join(self.output_path, 'monitor/')
-        self.config_path  = os.path.join(self.output_path, 'config.txt')
+        self.config_path  = os.path.join(self.output_path, 'train_frozenlake_aqn_config.txt')
         self.qn_src_path  = os.path.join(project_config.models_dir, 'QN.py')
         self.qn_dst_path  = os.path.join(self.output_path, 'QN.py')
         self.dqn_src_path = os.path.join(project_config.models_dir, 'DQN.py')
         self.dqn_dst_path = os.path.join(self.output_path, 'DQN.py')
         self.aqn_src_path = os.path.join(project_config.models_dir, 'AQN.py')
         self.aqn_dst_path = os.path.join(self.output_path, 'AQN.py')
+        self.project_cfg_src_path = os.path.join(project_config.base_dir, 'admin', 'config.py')
+        self.project_cfg_dst_path = os.path.join('project_config.py')
 
         # model and training config
         self.num_episodes_test = 40

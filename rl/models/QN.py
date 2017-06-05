@@ -104,15 +104,15 @@ class QN(object):
         """
         Defines extra attributes for tensorboard
         """
-        self.avg_reward = -21.
-        self.max_reward = -21.
+        self.avg_reward = 0.
+        self.max_reward = 0.
         self.std_reward = 0
 
         self.avg_q = 0
         self.max_q = 0
         self.std_q = 0
         
-        self.eval_reward = -21.
+        self.eval_reward = 0.
 
     def update_averages(self, rewards, max_q_values, q_values, scores_eval):
         """
