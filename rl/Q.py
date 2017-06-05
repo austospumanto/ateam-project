@@ -9,9 +9,9 @@ import tqdm
 
 from admin.config import project_config
 from envs import MfccFrozenlake
-from speech.StateRecognizer import StateRecognizer
-from speech.digits import DigitsRecognizer
-from speech.model import CTCModel
+from speech.models.DigitsRecognizer import DigitsRecognizer
+from speech.models.StateRecognizer import StateRecognizer
+from speech.models.model import CTCModel
 
 # This registers the various FrozenLake maps by ID with Gym
 

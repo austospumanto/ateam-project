@@ -87,7 +87,7 @@ class AQN(DQN):
             :param seq_len: 
         """
         # this information might be useful
-        num_actions = self.env.action_space.n
+        num_actions = self.train_env.action_space.n
         ##############################################################
         """
         TODO: implement the computation of Q values like in the paper
@@ -125,16 +125,19 @@ class AQN(DQN):
                 dtype=tf.float32
             )
 
-            fc = layers.fully_connected(
-                inputs=last_states,
-                num_outputs=self.config.n_hidden_fc,
-                activation_fn=tf.nn.relu,
-                reuse=reuse,
-                weights_initializer=layers.variance_scaling_initializer()
-            )
+            if self.config.n_hidden_fc:
+                fc = layers.fully_connected(
+                    inputs=last_states,
+                    num_outputs=self.config.n_hidden_fc,
+                    activation_fn=tf.nn.relu,
+                    reuse=reuse,
+                    weights_initializer=layers.variance_scaling_initializer()
+                )
+
+            logits_input = fc if self.config.n_hidden_fc else last_states
 
             logits = layers.fully_connected(
-                inputs=fc,
+                inputs=logits_input,
                 num_outputs=num_actions,
                 activation_fn=None,
                 reuse=reuse,

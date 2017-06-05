@@ -19,15 +19,15 @@ num_iters = 100000
 def _get_start_policy(policy):
     # [0: left, 1: down, 2: right, 3: up]
     start_policy = None
-    if policy == 1:
+    if policy == '1':
         start_policy = {
             0: 1,
-            1: 0,
-            2: 0,
+            1: 2,
+            2: 1,
             3: 0,
             4: 1,
             5: 0,
-            6: 3,
+            6: 1,
             7: 0,
             8: 2,
             9: 2,
@@ -38,7 +38,7 @@ def _get_start_policy(policy):
             14: 2,
             15: 2
         }
-    elif policy == 2:
+    elif policy == '2':
         start_policy = {
             0: 3,
             1: 3,
@@ -139,13 +139,13 @@ def grid_print(V):
 
 
 def main(start_policy):
-    env = gym.make('Stochastic-4x4-FrozenLake-v0')
+    env = gym.make('Deterministic-4x4-FrozenLake-v0')
 
-    # V, average_R, average_steps = _monte_carlo_eval(env, start_policy, 0.006, eps=0.0, gamma=1.0)
-    # grid_print(V)
-    # print 'average_R=%f' % average_R
-    # print 'average_steps=%f' % average_steps
-    # exit()
+    V, average_R, average_steps = _monte_carlo_eval(env, start_policy, 0.2, eps=0.00, gamma=1.0)
+    grid_print(V)
+    print 'average_R=%f' % average_R
+    print 'average_steps=%f' % average_steps
+    exit()
 
     wer_list = np.linspace(0.0, 0.03, num=20)
     Q_max_list = np.zeros(20)

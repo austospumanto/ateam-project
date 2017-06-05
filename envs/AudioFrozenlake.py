@@ -1,19 +1,26 @@
-from speech.digits import DigitsSpeaker
+from data.DigitsSample import DigitsSampleCollection
+from data.tidigits import tidigits_db
 import gym
 
 
 class AudioFrozenlake(gym.Wrapper):
-    def __init__(self, env):
+    """
+    NOTE: Wrap this env around a raw FrozenLake-v0 type env
+    """
+    def __init__(self, env, audio_sample_ids, usage):
         super(AudioFrozenlake, self).__init__(env)
-        self._digits_speaker = DigitsSpeaker()
+        self._audio_sample_ids = audio_sample_ids
+        self.digits_sample_collection = DigitsSampleCollection(audio_sample_ids)
+        self.usage = usage
 
     # Private method
-    def _speak_state(self, state):
-        return self._digits_speaker.speak(state)
+    def _speak_state_as_audio(self, state):
+        digits_sample = self.digits_sample_collection.choose_random_sample(state)
+        return digits_sample.audio
 
     # Wrapper overload
     def _reset(self):
-        return self._speak_state(self.env.reset())
+        return self._speak_state_as_audio(self.env.reset())
 
     # Wrapper overload
     def _step(self, action):
@@ -23,6 +30,15 @@ class AudioFrozenlake(gym.Wrapper):
         info['state'] = next_state
 
         # Convert state int to pure audio
-        next_state_audio = self._speak_state(next_state)
+        next_state_audio = self._speak_state_as_audio(next_state)
 
         return next_state_audio, reward, done, info
+
+    @classmethod
+    def make_train_val_test_envs(cls, base_env_name, data_splits=None):
+        data_splits = data_splits or tidigits_db.get_split_fl_dataset()
+        train_env, val_env, test_env = [
+            AudioFrozenlake(gym.make(base_env_name), data_splits[usage], usage)
+            for usage in ('train', 'test', 'val')
+        ]
+        return train_env, val_env, test_env

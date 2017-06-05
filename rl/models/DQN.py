@@ -75,7 +75,7 @@ class DQN(QN):
             target_q: (tf tensor) shape = (batch_size, num_actions)
         """
         # you may need this variable
-        num_actions = self.env.action_space.n
+        num_actions = self.train_env.action_space.n
 
         ##############################################################
         """
@@ -125,7 +125,7 @@ class DQN(QN):
         Q_sa = tf.reduce_sum(tf.multiply(q, action_mask), axis=1)
 
         # Shape is ()
-        self.loss = tf.reduce_mean(
+        loss = tf.reduce_mean(
             tf.square(
                 tf.subtract(
                     Q_samp_s,
@@ -133,6 +133,17 @@ class DQN(QN):
                 )
             )
         )
+
+        # L2 Regularization
+        l2_cost = 0.0
+        for variable in tf.trainable_variables():
+            name = variable.name
+            shape = variable.get_shape().as_list()
+            # Avoid biases in L2 loss
+            if len(shape) != 1 and "biases" not in name:
+                l2_cost += tf.nn.l2_loss(variable)
+
+        self.loss = loss + self.config.l2_lambda * l2_cost
         ##############################################################
         ######################## END YOUR CODE #######################
 
@@ -248,6 +259,7 @@ class DQN(QN):
         shutil.copy2(self.config.qn_src_path, self.config.qn_dst_path)
         shutil.copy2(self.config.dqn_src_path, self.config.dqn_dst_path)
         shutil.copy2(self.config.aqn_src_path, self.config.aqn_dst_path)
+        shutil.copy2(self.config.project_cfg_src_path, self.config.project_cfg_dst_path)
 
         # create tf session
         self.sess = tf.Session()
@@ -299,14 +311,14 @@ class DQN(QN):
         self.merged = tf.summary.merge_all()
         self.file_writer = tf.summary.FileWriter(self.config.output_path, self.sess.graph)
 
-    def save(self):
+    def save(self, global_step=None):
         """
         Saves session
         """
-        if not os.path.exists(self.config.model_output):
-            os.makedirs(self.config.model_output)
+        if not os.path.exists(self.config.model_output_path):
+            os.makedirs(self.config.model_output_path)
 
-        self.saver.save(self.sess, self.config.model_output)
+        self.saver.save(self.sess, self.config.model_output_path, global_step=global_step)
 
     def get_best_action(self, state):
         """

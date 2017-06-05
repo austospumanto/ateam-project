@@ -13,7 +13,7 @@ class QN(object):
     """
     Abstract Class for implementing a Q Network
     """
-    def __init__(self, env, config, logger=None):
+    def __init__(self, config, train_env, val_env, logger=None):
         """
         Initialize Q Network and env
 
@@ -30,7 +30,8 @@ class QN(object):
         self.logger = logger
         if logger is None:
             self.logger = get_logger(config.log_path, logger_name=__name__)
-        self.env = env
+        self.train_env = train_env
+        self.val_env = val_env
 
         # build model
         self.build()
@@ -48,12 +49,13 @@ class QN(object):
         """
         return lambda state: self.get_action(state)
 
-    def save(self):
+    def save(self, global_step=None):
         """
         Save model parameters
 
         Args:
             model_path: (string) directory
+            global_step: (int) training step we're at
         """
         pass
 
@@ -82,7 +84,7 @@ class QN(object):
             state: observation from gym
         """
         if np.random.random() < self.config.soft_epsilon:
-            return self.env.action_space.sample()
+            return self.train_env.action_space.sample()
         else:
             return self.get_best_action(state)[0]
 
@@ -102,15 +104,15 @@ class QN(object):
         """
         Defines extra attributes for tensorboard
         """
-        self.avg_reward = -21.
-        self.max_reward = -21.
+        self.avg_reward = 0.
+        self.max_reward = 0.
         self.std_reward = 0
 
         self.avg_q = 0
         self.max_q = 0
         self.std_q = 0
         
-        self.eval_reward = -21.
+        self.eval_reward = 0.
 
     def update_averages(self, rewards, max_q_values, q_values, scores_eval):
         """
@@ -159,13 +161,13 @@ class QN(object):
         # interact with environment
         while t < self.config.nsteps_train:
             total_reward = 0
-            state = self.env.reset()
+            state = self.train_env.reset()
             while True:
                 t += 1
                 last_eval += 1
                 last_record += 1
                 if self.config.render_train:
-                    self.env.render()
+                    self.train_env.render()
 
                 # replay memory stuff
                 idx      = replay_buffer.store_audio(state)
@@ -180,7 +182,7 @@ class QN(object):
                 q_values += list(q_values)
 
                 # perform action in env
-                new_state, reward, done, info = self.env.step(action)
+                new_state, reward, done, info = self.train_env.step(action)
 
                 # store the transition
                 replay_buffer.store_effect(idx, action, reward, done)
@@ -251,7 +253,7 @@ class QN(object):
             
         # occasionaly save the weights
         if t % self.config.saving_freq == 0:
-            self.save()
+            self.save(global_step=t)
 
         return loss_eval, grad_eval
 
@@ -268,7 +270,7 @@ class QN(object):
             num_episodes = self.config.num_episodes_test
 
         if env is None:
-            env = self.env
+            env = self.val_env
 
         # replay memory to play
         replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)
@@ -328,12 +330,12 @@ class QN(object):
         Re create an env and record a video for one episode
         """
         return
-        env = gym.make(self.config.env_name)
-        env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
-        env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
-        env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1), 
-                            overwrite_render=self.config.overwrite_render)
-        self.evaluate(env, 1)
+        # env = gym.make(self.config.env_name)
+        # env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
+        # env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
+        # env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
+        #                     overwrite_render=self.config.overwrite_render)
+        # self.evaluate(env, 1)
 
     def run(self, exp_schedule, lr_schedule):
         """
