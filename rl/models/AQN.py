@@ -29,7 +29,7 @@ class AQN(DQN):
                          shape = (batch_size, audio timesteps, audio features, config.state_history)
                - self.done_mask: batch of done, type = bool
                          shape = (batch_size)
-                         note that this placeholder contains bool = True only if we are done in 
+                         note that this placeholder contains bool = True only if we are done in
                          the relevant transition
                - self.lr: learning rate, type = float32
 
@@ -77,14 +77,14 @@ class AQN(DQN):
         Returns Q values for all actions
 
         Args:
-            state: (tf tensor) 
+            state: (tf tensor)
                 shape = (batch_size, img height, img width, nchannels)
             scope: (string) scope name, that specifies if target network or not
             reuse: (bool) reuse of variables in the scope
 
         Returns:
             out: (tf tensor) of shape = (batch_size, num_actions)
-            :param seq_len: 
+            :param seq_len:
         """
         # this information might be useful
         num_actions = self.train_env.action_space.n
@@ -94,7 +94,7 @@ class AQN(DQN):
                 https://storage.googleapis.com/deepmind-data/assets/papers/DeepMindNature14236Paper.pdf
                 https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf
 
-              you may find the section "model architecture" of the appendix of the 
+              you may find the section "model architecture" of the appendix of the
               nature paper particulary useful.
 
               store your result in out of shape = (batch_size, num_actions)
@@ -125,16 +125,25 @@ class AQN(DQN):
                 dtype=tf.float32
             )
 
-            if self.config.n_hidden_fc:
-                fc = layers.fully_connected(
-                    inputs=last_states,
-                    num_outputs=self.config.n_hidden_fc,
-                    activation_fn=tf.nn.relu,
-                    reuse=reuse,
-                    weights_initializer=layers.variance_scaling_initializer()
+            # if self.config.n_hidden_fc:
+            #     fc = layers.fully_connected(
+            #         inputs=last_states,
+            #         num_outputs=self.config.n_hidden_fc,
+            #         activation_fn=tf.nn.relu,
+            #         reuse=reuse,
+            #         weights_initializer=layers.variance_scaling_initializer()
+            #     )
+
+            if self.config.n_lstm_cells:
+                lstm_cell = tf.contrib.rnn.LSTMCell(self.config.n_lstm_cells, state_is_tuple=False, reuse=reuse)
+                lstm_out, lstm_last = tf.nn.dynamic_rnn(
+                    cell=lstm_cell,
+                    inputs=rnn_outputs,
+                    dtype=tf.float32
                 )
 
-            logits_input = fc if self.config.n_hidden_fc else last_states
+            logits_input = lstm_last
+            # logits_input = fc if self.config.n_hidden_fc else last_states
 
             logits = layers.fully_connected(
                 inputs=logits_input,
@@ -143,6 +152,7 @@ class AQN(DQN):
                 reuse=reuse,
                 weights_initializer=layers.variance_scaling_initializer()
             )
+
         # if self.config.clip_q:
         #     logits = tf.clip_by_value(logits, 0.0, 1.0)
         ##############################################################

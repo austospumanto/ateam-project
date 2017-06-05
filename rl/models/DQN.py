@@ -21,7 +21,7 @@ class DQN(QN):
 
     def add_update_target_op(self, q_scope, target_q_scope):
         """
-        update_target_op will be called periodically 
+        update_target_op will be called periodically
         to copy Q network weights to target Q network
 
         Remember that in DQN, we maintain two identical Q networks with
@@ -31,10 +31,10 @@ class DQN(QN):
         in tensorflow, read the docs
         https://www.tensorflow.org/programmers_guide/variable_scope
 
-        Periodically, we need to update all the weights of the Q network 
+        Periodically, we need to update all the weights of the Q network
         and assign them with the values from the regular network. Thus,
-        what we need to do is to build a tf op, that, when called, will 
-        assign all variables in the target network scope with the values of 
+        what we need to do is to build a tf op, that, when called, will
+        assign all variables in the target network scope with the values of
         the corresponding variables of the regular network scope.
 
         Args:
@@ -45,7 +45,7 @@ class DQN(QN):
         ##############################################################
         """
         TODO: add an operator self.update_target_op that assigns variables
-            from target_q_scope with the values of the corresponding var 
+            from target_q_scope with the values of the corresponding var
             in q_scope
 
         HINT: you may find the following functions useful:
@@ -82,7 +82,7 @@ class DQN(QN):
         TODO: The loss for an example is defined as:
                 Q_samp(s) = r if done
                           = r + gamma * max_a' Q_target(s', a')
-                loss = (Q_samp(s) - Q(s, a))^2 
+                loss = (Q_samp(s) - Q(s, a))^2
 
               You need to compute the average of the loss over the minibatch
               and store the resulting scalar into self.loss
@@ -254,7 +254,7 @@ class DQN(QN):
             for key, value in self.config.__dict__.iteritems():
                 if not key.startswith('__') and not key.endswith('__'):
                     configfile.write('%s=%s\n' % (str(key), str(value)))
-        
+
         # Saves a copy of *QN.py at the time of run to self.config_*qn_dst_path
         shutil.copy2(self.config.qn_src_path, self.config.qn_dst_path)
         shutil.copy2(self.config.dqn_src_path, self.config.dqn_dst_path)
@@ -276,7 +276,7 @@ class DQN(QN):
 
         # for saving networks weights
         self.saver = tf.train.Saver()
-       
+
     def add_summary(self):
         """
         Tensorboard stuff
@@ -306,7 +306,7 @@ class DQN(QN):
         tf.summary.scalar("Std Q", self.std_q_placeholder)
 
         tf.summary.scalar("Eval Reward", self.eval_reward_placeholder)
-            
+
         # logging
         self.merged = tf.summary.merge_all()
         self.file_writer = tf.summary.FileWriter(self.config.output_path, self.sess.graph)
@@ -356,15 +356,15 @@ class DQN(QN):
             self.r: r_batch,
             self.sp: sp_batch,
             self.done_mask: done_mask_batch,
-            self.lr: lr, 
+            self.lr: lr,
             # extra info
-            self.avg_reward_placeholder: self.avg_reward, 
-            self.max_reward_placeholder: self.max_reward, 
-            self.std_reward_placeholder: self.std_reward, 
-            self.avg_q_placeholder: self.avg_q, 
-            self.max_q_placeholder: self.max_q, 
-            self.std_q_placeholder: self.std_q, 
-            self.eval_reward_placeholder: self.eval_reward, 
+            self.avg_reward_placeholder: self.avg_reward,
+            self.max_reward_placeholder: self.max_reward,
+            self.std_reward_placeholder: self.std_reward,
+            self.avg_q_placeholder: self.avg_q,
+            self.max_q_placeholder: self.max_q,
+            self.std_q_placeholder: self.std_q,
+            self.eval_reward_placeholder: self.eval_reward,
         }
 
         loss_eval, grad_norm_eval, summary, _ = self.sess.run(
@@ -373,7 +373,7 @@ class DQN(QN):
 
         # tensorboard stuff
         self.file_writer.add_summary(summary, t)
-        
+
         return loss_eval, grad_norm_eval
 
     def update_target_params(self):

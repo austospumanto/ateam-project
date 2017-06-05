@@ -71,3 +71,6 @@ class config(object):
         self.n_hidden_rnn       = 128
         self.n_hidden_fc        = 64
         self.n_layers_rnn         = 1
+
+        # for DQRL
+        self.n_lstm_cells       = 32
