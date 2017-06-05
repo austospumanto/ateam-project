@@ -125,7 +125,7 @@ class DQN(QN):
         Q_sa = tf.reduce_sum(tf.multiply(q, action_mask), axis=1)
 
         # Shape is ()
-        self.loss = tf.reduce_mean(
+        loss = tf.reduce_mean(
             tf.square(
                 tf.subtract(
                     Q_samp_s,
@@ -133,6 +133,17 @@ class DQN(QN):
                 )
             )
         )
+
+        # L2 Regularization
+        l2_cost = 0.0
+        for variable in tf.trainable_variables():
+            name = variable.name
+            shape = variable.get_shape().as_list()
+            # Avoid biases in L2 loss
+            if len(shape) != 1 and "biases" not in name:
+                l2_cost += tf.nn.l2_loss(variable)
+
+        self.loss = loss + self.config.l2_lambda * l2_cost
         ##############################################################
         ######################## END YOUR CODE #######################
 

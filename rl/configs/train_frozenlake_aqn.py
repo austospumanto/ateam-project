@@ -34,19 +34,19 @@ class config(object):
         self.project_cfg_dst_path = os.path.join('project_config.py')
 
         # model and training config
-        self.num_episodes_test = 40
-        self.max_steps_test    = 100
+        self.num_episodes_test = 30
+        self.max_steps_test    = 30
         self.grad_clip         = True
-        self.clip_val          = 5
+        self.clip_val          = 10
         self.saving_freq       = 2500
-        self.log_freq          = 50
+        self.log_freq          = 100
         self.eval_freq         = 1000
         self.record_freq       = 1000
         self.soft_epsilon      = 0.00  # Set this to 0 so no random actions during testing
         self.clip_q            = False
 
         # nature paper hyper params
-        self.nsteps_train       = 2000000
+        self.nsteps_train       = 1000000
         self.batch_size         = 128
         self.buffer_size        = 10000
         self.target_update_freq = 25
@@ -55,18 +55,19 @@ class config(object):
         self.state_history      = 1
         self.skip_frame         = 1
         self.lr_begin           = 0.00025
-        self.lr_end             = 0.000005
-        self.lr_nsteps          = self.nsteps_train/2
+        self.lr_end             = 0.000001
+        self.lr_nsteps          = self.nsteps_train/5
         self.eps_begin          = 1.0
         self.eps_end            = 0.05
         self.eps_nsteps         = 10000
         self.learning_start     = 1000
+        self.l2_lambda          = 1e-12
 
         # for mfcc derivation
         self.num_mfcc           = 13
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 64
-        self.n_hidden_fc        = 16
+        self.n_hidden_rnn       = 128
+        self.n_hidden_fc        = 64
         self.n_layers_rnn         = 1
