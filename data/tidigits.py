@@ -21,6 +21,7 @@ conn.row_factory = sqlite3.Row
 class DigitsSynthesizedSample(object):
     def __init__(self, samples):
         self.samples = samples
+        self.audio = None
         for sample in self.samples:
             raw_audio = scikits.audiolab.Sndfile(sample.path, 'r')
             if not self.audio:
