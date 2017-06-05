@@ -1,11 +1,7 @@
-import gym
-
-from rl.schedule import LinearExploration, LinearSchedule
-from rl.models.AQN import AQN
-from envs.MfccFrozenlake import MfccFrozenlake
-from envs.AudioFrozenlake import AudioFrozenlake
-
 from configs.train_frozenlake_aqn import config
+from envs.MfccFrozenlake import MfccFrozenlake
+from rl.models.AQN import AQN
+from rl.utils.schedule import LinearExploration, LinearSchedule
 
 """
 Use deep Q network for the Atari game. Please report the final result.

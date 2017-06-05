@@ -45,11 +45,11 @@ class config(object):
 
         # nature paper hyper params
         self.nsteps_train       = 2000000
-        self.batch_size         = 32
+        self.batch_size         = 128
         self.buffer_size        = 10000
         self.target_update_freq = 25
         self.gamma              = 0.95
-        self.learning_freq      = 1
+        self.learning_freq      = 4
         self.state_history      = 1
         self.skip_frame         = 1
         self.lr_begin           = 0.00025

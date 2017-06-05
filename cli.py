@@ -19,8 +19,7 @@ if os.path.exists(dotenv_path):
 import fire
 
 from rl import Q
-from data import process_tidigits
-from data import tidigits
+from data.tidigits import tidigits_db
 from rl import train_frozenlake_aqn
 from envs.lake_envs import *
 
@@ -35,11 +34,12 @@ class Ateam(object):
     def shallow_q_network_with_asr(self):
         Q.shallow_q_network_with_asr()
 
-    def process_tidigits(self):
-        process_tidigits.process_data()
+    def process_tidigits(self, sequence_len=None):
+        sequence_len = int(sequence_len) if sequence_len else None
+        tidigits_db.process_data(sequence_len)
 
-    def get_split_dataset(self):
-        tidigits.get_split_dataset()
+    def get_split_fl_dataset(self):
+        tidigits_db.get_split_fl_dataset()
 
     def train_and_test_with_asr(self):
         Q.train_and_test_with_asr()

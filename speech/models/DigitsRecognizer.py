@@ -1,5 +1,6 @@
 import numpy as np
-from speech.model_utils import label_from_sparse_tensor
+
+from speech.models.model_utils import label_from_sparse_tensor
 
 
 class DigitsRecognizer(object):

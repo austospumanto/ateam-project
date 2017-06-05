@@ -3,20 +3,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import time
-import argparse
-import math
-import random
-import os
+from speech.models.model_utils import *
+
+
 # uncomment this line to suppress Tensorflow warnings
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import tensorflow as tf
-import numpy as np
-from six.moves import xrange as range
-
-from speech.model_utils import *
-import pdb
-from time import gmtime, strftime
 
 
 class Config:

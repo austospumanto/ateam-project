@@ -1,6 +1,6 @@
 import gym
-from data import tidigits
-from data.tidigits import DigitsSampleCollection
+from data.tidigits import tidigits_db
+from data.DigitsSample import DigitsSampleCollection
 
 
 class MfccFrozenlake(gym.Wrapper):
@@ -37,7 +37,7 @@ class MfccFrozenlake(gym.Wrapper):
 
     @classmethod
     def make_train_val_test_envs(cls, base_env_name, data_splits=None, num_mfcc=13):
-        data_splits = data_splits or tidigits.get_split_dataset()
+        data_splits = data_splits or tidigits_db.get_split_fl_dataset()
         train_env, val_env, test_env = [
             MfccFrozenlake(gym.make(base_env_name), data_splits[usage], usage, num_mfcc=num_mfcc)
             for usage in ('train', 'test', 'val')

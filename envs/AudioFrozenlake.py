@@ -1,5 +1,5 @@
-from data.tidigits import DigitsSampleCollection
-from data import tidigits
+from data.DigitsSample import DigitsSampleCollection
+from data.tidigits import tidigits_db
 import gym
 
 
@@ -36,7 +36,7 @@ class AudioFrozenlake(gym.Wrapper):
 
     @classmethod
     def make_train_val_test_envs(cls, base_env_name, data_splits=None):
-        data_splits = data_splits or tidigits.get_split_dataset()
+        data_splits = data_splits or tidigits_db.get_split_fl_dataset()
         train_env, val_env, test_env = [
             AudioFrozenlake(gym.make(base_env_name), data_splits[usage], usage)
             for usage in ('train', 'test', 'val')
