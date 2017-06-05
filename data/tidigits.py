@@ -24,7 +24,7 @@ class DigitsSynthesizedSample(object):
         self.audio = None
         for sample in self.samples:
             raw_audio = scikits.audiolab.Sndfile(sample.path, 'r')
-            if not self.audio:
+            if self.audio is None:
                 self.audio = raw_audio.read_frames(raw_audio.nframes)
             else:
                 self.audio = np.concatenate((self.audio, raw_audio.read_frames()))
