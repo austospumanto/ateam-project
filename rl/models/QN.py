@@ -13,7 +13,7 @@ class QN(object):
     """
     Abstract Class for implementing a Q Network
     """
-    def __init__(self, config, train_env, val_env, logger=None):
+    def __init__(self, config, envs, logger=None, mode='train'):
         """
         Initialize Q Network and env
 
@@ -21,17 +21,22 @@ class QN(object):
             config: class with hyperparameters
             logger: logger instance from logging module
         """
+        assert mode in ('train', 'test')
+        self.mode = mode
+
         # directory for training outputs
-        if not os.path.exists(config.output_path):
+        if mode == 'train' and not os.path.exists(config.output_path):
             os.makedirs(config.output_path)
             
         # store hyper params
         self.config = config
         self.logger = logger
         if logger is None:
+            assert mode == 'train'
             self.logger = get_logger(config.log_path, logger_name=__name__)
-        self.train_env = train_env
-        self.val_env = val_env
+        self.train_env = envs['train']
+        self.val_env = envs['val']
+        self.test_env = envs['test']
 
         # build model
         self.build()
@@ -257,10 +262,13 @@ class QN(object):
 
         return loss_eval, grad_eval
 
-    def evaluate(self, env=None, num_episodes=None):
+    def evaluate(self, env=None, num_episodes=None, max_episode_steps=None):
         """
         Evaluation with same procedure as the training
         """
+        if max_episode_steps is None:
+            max_episode_steps = self.config.max_steps_test
+
         # log our activity only if default call
         if num_episodes is None:
             self.logger.info("Evaluating...")
@@ -282,7 +290,7 @@ class QN(object):
             info = None
             a_to_d = ['left', 'down', 'right', 'up']
             steps_taken = 0
-            while True and steps_taken < self.config.max_steps_test:
+            while True and steps_taken < max_episode_steps:
                 if self.config.render_test:
                     env.render()
 
@@ -346,6 +354,7 @@ class QN(object):
             lr_schedule: schedule for learning rate
         """
         # initialize
+        assert self.mode == 'train'
         self.initialize()
 
         # record one game at the beginning

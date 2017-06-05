@@ -232,3 +232,6 @@ class AQN(DQN):
         seq_len = state.shape[0]
         action_values = self.sess.run(self.q, feed_dict={self.s: [state], self.sl: [seq_len]})[0]
         return np.argmax(action_values), action_values
+
+    def test(self):
+        pass

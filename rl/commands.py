@@ -4,6 +4,7 @@ from envs.MfccFrozenlake import MfccFrozenlake
 from rl.models.AQN import AQN
 from rl.utils.schedule import LinearExploration, LinearSchedule
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -25,24 +26,41 @@ address-ip-of-the-server:6006
 """
 
 
-def main(run_name):
-    # Initialize configuration
-    run_config = config(run_name)
-
+def make_split_envs(run_config):
     train_env, val_env, test_env = MfccFrozenlake.make_train_val_test_envs(
         run_config.env_name, num_mfcc=run_config.num_mfcc,
-        use_synthesized=project_config.audio_clip_mode)
+        use_synthesized=run_config.audio_clip_mode)
 
     logger.info('Train env has %d raw samples' % train_env.n_samples)
     logger.info('Val env has %d raw samples' % val_env.n_samples)
     logger.info('Test env has %d raw samples' % test_env.n_samples)
 
-    # exploration strategy
-    exp_schedule = LinearExploration(train_env, run_config.eps_begin, run_config.eps_end, run_config.eps_nsteps) 
+    return {
+        'train': train_env,
+        'val': val_env,
+        'test': test_env
+    }
 
-    # learning rate schedule
+
+def train_frozenlake_aqn(run_name):
+    run_config = config(run_name)
+    envs = make_split_envs(run_config)
+    exp_schedule = LinearExploration(envs['train'], run_config.eps_begin, run_config.eps_end, run_config.eps_nsteps)
     lr_schedule = LinearSchedule(run_config.lr_begin, run_config.lr_end, run_config.lr_nsteps)
+    aqn_model = AQN(run_config, envs=envs, mode='train')
+    aqn_model.run(exp_schedule, lr_schedule)
 
-    # train model
-    model = AQN(run_config, train_env=train_env, val_env=val_env)
-    model.run(exp_schedule, lr_schedule)
+
+def test_frozenlake_aqn(restore_run_name, env_to_test='test'):
+    assert env_to_test in ('train', 'val', 'test')
+    run_config = config(restore_run_name)
+
+    # Create the train,val,test envs in standard or synthesized mode
+    envs = make_split_envs(run_config)
+
+    aqn_model = AQN(run_config, envs=envs, logger=logger, mode='test')
+
+    # Restore weights from latest checkpoint
+    aqn_model.restore()
+
+    aqn_model.evaluate(envs[env_to_test], num_episodes=5, max_episode_steps=10)

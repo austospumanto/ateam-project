@@ -15,6 +15,7 @@ class config(object):
         self.high             = 255.
 
         # output config
+        self.run_name = run_name
         self.run_dir = '%s-%s' % (datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), run_name)
         self.output_path  = os.path.join(
             project_config.base_dir, 'results', self.run_dir
@@ -71,3 +72,8 @@ class config(object):
         self.n_hidden_rnn       = 128
         self.n_hidden_fc        = 64
         self.n_layers_rnn         = 1
+
+        # For the MfccFrozenLake environment
+        self.audio_clip_mode = 'standard'  # oneof('standard', 'synthesized')
+        if 'synth' in run_name:
+            self.audio_clip_mode = 'synthesized'
