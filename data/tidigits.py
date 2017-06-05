@@ -138,7 +138,7 @@ def get_split_dataset():
          (digits like ? or digits = ? or digits = ? or digits = ? \
          (digits like ? or digits = ? or digits = ? or digits = ? \
          or digits = ?);",
-        ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9', \
          'z%', '1z', '11', '12', '13', '14', '15')
     ))
     test_ids = [int(row['id']) for row in test_rows]
@@ -151,7 +151,7 @@ def get_split_dataset():
          (digits like ? or digits = ? or digits = ? or digits = ? \
          (digits like ? or digits = ? or digits = ? or digits = ? \
          or digits = ?);",
-        ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9', \
          'z%', '1z', '11', '12', '13', '14', '15')
     ))
 
