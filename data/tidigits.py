@@ -27,7 +27,7 @@ class DigitsSynthesizedSample(object):
             if self.audio is None:
                 self.audio = raw_audio.read_frames(raw_audio.nframes)
             else:
-                self.audio = np.concatenate((self.audio, raw_audio.read_frames()))
+                self.audio = np.concatenate((self.audio, raw_audio.read_frames(raw_audio.nframes)))
 
     def to_mfccs(self, num_mfcc=13):
         sample_mfcc_tup = tuple(sample.to_mfccs(num_mfcc=num_mfcc) for sample in self.samples)
