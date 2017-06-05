@@ -125,15 +125,6 @@ class AQN(DQN):
                 dtype=tf.float32
             )
 
-            # if self.config.n_hidden_fc:
-            #     fc = layers.fully_connected(
-            #         inputs=last_states,
-            #         num_outputs=self.config.n_hidden_fc,
-            #         activation_fn=tf.nn.relu,
-            #         reuse=reuse,
-            #         weights_initializer=layers.variance_scaling_initializer()
-            #     )
-
             if self.config.n_lstm_cells:
                 lstm_cell = tf.contrib.rnn.LSTMCell(self.config.n_lstm_cells, state_is_tuple=False, reuse=reuse)
                 lstm_out, lstm_last = tf.nn.dynamic_rnn(
@@ -142,7 +133,16 @@ class AQN(DQN):
                     dtype=tf.float32
                 )
 
-            logits_input = lstm_last
+            if self.config.n_hidden_fc:
+                fc = layers.fully_connected(
+                    inputs=lstm_last,
+                    num_outputs=self.config.n_hidden_fc,
+                    activation_fn=tf.nn.relu,
+                    reuse=reuse,
+                    weights_initializer=layers.variance_scaling_initializer()
+                )
+
+            logits_input = fc
             # logits_input = fc if self.config.n_hidden_fc else last_states
 
             logits = layers.fully_connected(

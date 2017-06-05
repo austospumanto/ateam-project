@@ -69,7 +69,7 @@ class config(object):
 
         # for the Neural Net
         self.n_hidden_rnn       = 128
-        self.n_hidden_fc        = 64
+        self.n_hidden_fc        = 16
         self.n_layers_rnn         = 1
 
         # for DQRL
