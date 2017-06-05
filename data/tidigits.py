@@ -172,9 +172,13 @@ def get_split_dataset():
     assert len(set(train_ids) & set(val_ids) & set(test_ids)) == 0
     total_num_samples = fetchall_for_query((
         "select count(*) as total from tidigits where \
-         (digits like ? or digits = ? or digits = ? or digits = ? \
-         or digits = ? or digits = ? or digits = ?);",
-        ('z%', '1z', '11', '12', '13', '14', '15')
+         (digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits like ? or digits = ? or digits = ? or digits = ? or \
+         digits = ?);",
+        ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+         'z%', '1z', '11', '12', '13', '14', '15')
     ))[0]['total']
     assert len(train_ids) + len(val_ids) + len(test_ids) == total_num_samples
     return {
