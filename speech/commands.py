@@ -55,7 +55,7 @@ def train_ctcmodel(run_name):
     with tf.Graph().as_default():
         with tf.Session() as session:
             ctc_model = CTCModel()
-            saver = tf.train.Saver(tf.trainable_variables())
+            saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=run_config.max_saves_to_keep)
             session.run(tf.global_variables_initializer())
             train_writer = tf.summary.FileWriter(run_config.run_results_path, session.graph)
 
@@ -327,6 +327,7 @@ def transfer_train_ctcmodel(ctc_run_name, restore_run_name):
             logger.info('Post-init GRU norms' + repr(post_init_norms))
             assert pre_init_norms == post_init_norms
 
+            saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=run_config.max_saves_to_keep)
             train_writer = tf.summary.FileWriter(run_config.run_results_path, session.graph)
 
             step_ii = 0
