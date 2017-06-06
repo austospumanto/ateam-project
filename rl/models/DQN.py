@@ -322,27 +322,6 @@ class DQN(QN):
 
         self.saver.save(self.sess, self.config.model_output_path, global_step=global_step)
 
-    def restore(self):
-        saved_run_dir = os.path.join(project_config.saved_runs_dir, self.config.run_name)
-        model_weights_dir = os.path.join(saved_run_dir, 'model.weights')
-        assert os.path.exists(model_weights_dir)
-        saved_model_metas = glob.glob(os.path.join(model_weights_dir, '*.meta'))
-        assert len(saved_model_metas) > 0
-        ckpt_iters = sorted(
-            [int(os.path.basename(fp).split('.')[0][1:]) for fp in saved_model_metas])
-        self.logger.info('Found model checkpoints for iterations: ' + repr(ckpt_iters))
-        latest_ckpt_iter = ckpt_iters[-1]
-        latest_model_meta_path = [smm for smm in saved_model_metas
-                                  if str(latest_ckpt_iter) in smm][0]
-
-        # We load meta graph and restore weights
-        self.logger.info('Loading model meta information from "%s"' % latest_model_meta_path)
-        self.saver = tf.train.import_meta_graph(latest_model_meta_path)
-        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_weights_dir))
-        # self.build()
-        # self.sess.run(tf.global_variables_initializer())
-        # self.sess.run(self.update_target_op)
-
     def get_best_action(self, state):
         """
         Return best action (used during testing/evaluation)

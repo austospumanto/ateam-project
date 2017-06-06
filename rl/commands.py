@@ -5,6 +5,8 @@ from rl.models.AQN import AQN
 from rl.utils.schedule import LinearExploration, LinearSchedule
 import logging
 import os
+import tensorflow as tf
+import glob
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +60,8 @@ def test_frozenlake_aqn(restore_run_name, env_to_test):
 
     # Create the train,val,test envs in standard or synthesized mode
     envs = make_split_envs(run_config)
-
     aqn_model = AQN(run_config, envs=envs, logger=logger, mode='test')
-
-    # Restore weights from latest checkpoint
     aqn_model.restore()
-
-    aqn_model.evaluate(envs[env_to_test], num_episodes=100, max_episode_steps=100)
+    aqn_model.evaluate(envs[env_to_test],
+                       num_episodes=100,
+                       max_episode_steps=300)
