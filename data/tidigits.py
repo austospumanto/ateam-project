@@ -79,7 +79,7 @@ class TidigitsDatabase(object):
             self.fl_digits_query_args
         ))
 
-    def fetch_fl_digits(self, usage=None):
+    def fetch_non_fl_digits(self, usage=None):
         template_filler = ""
         if usage == 'test':
             template_filler = "usage = 'test' and "
