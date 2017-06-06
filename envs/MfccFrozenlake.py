@@ -1,6 +1,9 @@
 import gym
 from data.tidigits import tidigits_db
 from data.DigitsSample import DigitsSampleCollection, SynthesizedDigitsSampleCollection
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MfccFrozenlake(gym.Wrapper):
@@ -45,6 +48,7 @@ class MfccFrozenlake(gym.Wrapper):
     @classmethod
     def make_train_val_test_envs(cls, base_env_name, data_splits=None, num_mfcc=13,
                                  use_synthesized=False):
+        logger.info('Making train/val/test envs. use_synthesized=' + str(use_synthesized))
         data_splits = data_splits or tidigits_db.get_split_fl_dataset()
         train_env, val_env, test_env = [
             MfccFrozenlake(gym.make(base_env_name), data_splits[usage], usage, num_mfcc=num_mfcc,

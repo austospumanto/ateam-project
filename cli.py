@@ -20,7 +20,7 @@ import fire
 
 from rl import Q
 from data.tidigits import tidigits_db
-from rl import train_frozenlake_aqn
+from rl import commands
 from envs.lake_envs import *
 
 
@@ -47,8 +47,13 @@ class Ateam(object):
     def test_with_asr(self):
         Q.test_with_asr()
 
-    def train_frozenlake_aqn(self, run_name):
-        train_frozenlake_aqn.main(run_name)
+    def train_aqn(self, run_name):
+        commands.train_frozenlake_aqn(run_name)
+
+    def test_aqn(self, run_name, env_to_test='test'):
+        commands.test_frozenlake_aqn(run_name, env_to_test)
+
+
 
 if __name__ == "__main__":
     random.seed(42)

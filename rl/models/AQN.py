@@ -2,6 +2,9 @@ import tensorflow as tf
 from rl.models.DQN import DQN
 from tensorflow.contrib import layers
 import numpy as np
+from admin.config import project_config
+import os
+import glob
 
 
 class AQN(DQN):
@@ -153,27 +156,58 @@ class AQN(DQN):
         """
         Build model by adding all necessary variables
         """
-        # add placeholders
-        self.add_placeholders_op()
 
         # compute Q values of state
-        s = self.s  # self.process_state(self.s)
-        sl = self.sl
-        self.q = self.get_q_values_op(s, sl, scope="q", reuse=False)
+        if self.mode == 'train':
+            self.add_placeholders_op()
+            s = self.s  # self.process_state(self.s)
+            sl = self.sl
+            self.q = self.get_q_values_op(s, sl, scope="q", reuse=False)
 
-        # compute Q values of next state
-        sp = self.sp  # self.process_state(self.sp)
-        slp = self.slp
-        self.target_q = self.get_q_values_op(sp, slp, scope="target_q", reuse=False)
+            sp = self.sp  # self.process_state(self.sp)
+            slp = self.slp
+            self.target_q = self.get_q_values_op(sp, slp, scope="target_q", reuse=False)
 
-        # add update operator for target network
-        self.add_update_target_op("q", "target_q")
+            # add update operator for target network
+            self.add_update_target_op("q", "target_q")
 
-        # add square loss
-        self.add_loss_op(self.q, self.target_q)
+            # add square loss
+            self.add_loss_op(self.q, self.target_q)
 
-        # add optmizer for the main networks
-        self.add_optimizer_op("q")
+            # add optmizer for the main networks
+            self.add_optimizer_op("q")
+        elif self.mode == 'test':
+            self.s = tf.get_default_graph().get_tensor_by_name('s:0')
+            self.sl = tf.get_default_graph().get_tensor_by_name('sl:0')
+            self.q = tf.get_default_graph().get_tensor_by_name('q/fully_connected_1/BiasAdd:0')
+
+            # NOTE: This might be useful if we wanted to continue training
+            # self.sp = tf.get_default_graph().get_tensor_by_name('sp:0')
+            # self.slp = tf.get_default_graph().get_tensor_by_name('slp:0')
+            # self.target_q = tf.get_default_graph().get_tensor_by_name('target_q/fully_connected_1/BiasAdd:0')
+
+    def restore(self):
+        saved_run_dir = os.path.join(project_config.saved_runs_dir, self.config.run_name)
+        model_weights_dir = os.path.join(saved_run_dir, 'model.weights')
+        assert os.path.exists(model_weights_dir)
+        saved_model_metas = glob.glob(os.path.join(model_weights_dir, '*.meta'))
+        assert len(saved_model_metas) > 0
+        ckpt_iters = sorted(
+            [int(os.path.basename(fp).split('.')[0][1:]) for fp in saved_model_metas])
+        self.logger.info('Found model checkpoints for iterations: ' + repr(ckpt_iters))
+        latest_ckpt_iter = ckpt_iters[-1]
+        latest_model_meta_path = [smm for smm in saved_model_metas
+                                  if str(latest_ckpt_iter) in smm][0]
+
+        # We load meta graph and restore weights
+        self.logger.info('Loading model meta information from "%s"' % latest_model_meta_path)
+        self.saver = tf.train.import_meta_graph(latest_model_meta_path)
+        if not hasattr(self, 'sess'):
+            self.sess = tf.Session()
+        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_weights_dir))
+        self.build()
+        # self.sess.run(tf.global_variables_initializer())
+        # self.sess.run(self.update_target_op)
 
     def update_step(self, t, replay_buffer, lr):
         """

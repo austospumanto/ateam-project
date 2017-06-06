@@ -15,6 +15,7 @@ class config(object):
         self.high             = 255.
 
         # output config
+        self.run_name = run_name
         self.run_dir = '%s-%s' % (datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), run_name)
         self.output_path  = os.path.join(
             project_config.base_dir, 'results', self.run_dir
@@ -47,7 +48,7 @@ class config(object):
 
         # nature paper hyper params
         self.nsteps_train       = 1000000
-        self.batch_size         = 128
+        self.batch_size         = 99
         self.buffer_size        = 10000
         self.target_update_freq = 25
         self.gamma              = 0.95
@@ -68,6 +69,11 @@ class config(object):
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 128
-        self.n_hidden_fc        = 64
+        self.n_hidden_rnn       = 67
+        self.n_hidden_fc        = 33
         self.n_layers_rnn         = 1
+
+        # For the MfccFrozenLake environment
+        self.audio_clip_mode = 'synthesized'  # oneof('standard', 'synthesized')
+        # if 'synth' in run_name:
+        #     self.audio_clip_mode = 'synthesized'
