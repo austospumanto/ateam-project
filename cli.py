@@ -60,6 +60,9 @@ class Ateam(object):
     def transfer_train_ctc(self, ctc_run_name, other_run_name):
         speech_commands.transfer_train_ctcmodel(ctc_run_name, other_run_name)
 
+    def resume_train_ctc(self, run_name):
+        speech_commands.resume_train_ctcmodel(run_name)
+
 
 
 if __name__ == "__main__":

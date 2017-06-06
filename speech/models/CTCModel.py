@@ -28,41 +28,45 @@ class Config:
 
     batch_size = 64
     num_classes = 11   # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
-    num_hidden = 128
+    num_hidden = 64
     num_layers_rnn = 1
 
-    num_epochs = 500
+    num_epochs = 5000
     l2_lambda = 0.0000001
-    lr = 5e-4
+    lr = 5e-5
 
     tidigits_subset = 'fl'
 
     # Training vars
-    save_every = 5
+    save_every = 10
     log_every = 5
+    max_saves_to_keep = 100
 
-    def __init__(self, run_name):
+    def __init__(self, run_name, resume=False):
         self.run_name = run_name
         self.results_path = os.path.join(project_config.base_dir, 'speech', 'results')
-        self.run_results_path = os.path.join(
-            self.results_path,
-            '%s-%s' % (datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), run_name))
+        if resume:
+            dated_run_name = run_name
+        else:
+            dated_run_name = '%s-%s' % (datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), run_name)
+        self.run_results_path = os.path.join(self.results_path, dated_run_name)
         if not os.path.exists(self.run_results_path):
             os.makedirs(self.run_results_path)
         self.logs_dir = os.path.join(self.run_results_path, 'logs')
         self.model_outputs_path = os.path.join(self.run_results_path, 'model.weights/')
 
-        ctcmodel_src_path = os.path.join(project_config.base_dir, 'speech', 'models', 'CTCModel.py')
-        ctcmodel_dst_path = os.path.join(self.run_results_path, 'CTCModel.py')
-        shutil.copy2(ctcmodel_src_path, ctcmodel_dst_path)
+        if not resume:
+            ctcmodel_src_path = os.path.join(project_config.base_dir, 'speech', 'models', 'CTCModel.py')
+            ctcmodel_dst_path = os.path.join(self.run_results_path, 'CTCModel.py')
+            shutil.copy2(ctcmodel_src_path, ctcmodel_dst_path)
 
-        project_cfg_src_path = os.path.join(project_config.base_dir, 'admin', 'config.py')
-        project_cfg_dst_path = os.path.join(self.run_results_path, 'project_config.py')
-        shutil.copy2(project_cfg_src_path, project_cfg_dst_path)
+            project_cfg_src_path = os.path.join(project_config.base_dir, 'admin', 'config.py')
+            project_cfg_dst_path = os.path.join(self.run_results_path, 'project_config.py')
+            shutil.copy2(project_cfg_src_path, project_cfg_dst_path)
 
-        commands_src_path = os.path.join(project_config.base_dir, 'speech', 'commands.py')
-        commands_dst_path = os.path.join(self.run_results_path, 'commands.py')
-        shutil.copy2(commands_src_path, commands_dst_path)
+            commands_src_path = os.path.join(project_config.base_dir, 'speech', 'commands.py')
+            commands_dst_path = os.path.join(self.run_results_path, 'commands.py')
+            shutil.copy2(commands_src_path, commands_dst_path)
 
 
 class CTCModel(object):
