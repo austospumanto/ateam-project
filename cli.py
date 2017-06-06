@@ -50,8 +50,8 @@ class Ateam(object):
     def train_aqn(self, run_name):
         commands.train_frozenlake_aqn(run_name)
 
-    def test_aqn(self, run_name):
-        commands.test_frozenlake_aqn(run_name)
+    def test_aqn(self, run_name, env_to_test='test'):
+        commands.test_frozenlake_aqn(run_name, env_to_test)
 
 
 

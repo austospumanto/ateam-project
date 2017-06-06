@@ -13,7 +13,7 @@ class QN(object):
     """
     Abstract Class for implementing a Q Network
     """
-    def __init__(self, config, envs, logger=None, mode='train'):
+    def __init__(self, config, envs, logger=None, mode='train', sess=None):
         """
         Initialize Q Network and env
 
@@ -27,6 +27,9 @@ class QN(object):
         # directory for training outputs
         if mode == 'train' and not os.path.exists(config.output_path):
             os.makedirs(config.output_path)
+
+        if sess:
+            self.sess = sess
             
         # store hyper params
         self.config = config
@@ -39,7 +42,8 @@ class QN(object):
         self.test_env = envs['test']
 
         # build model
-        self.build()
+        if mode == 'train':
+            self.build()
 
     def build(self):
         """

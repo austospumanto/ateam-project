@@ -27,9 +27,10 @@ address-ip-of-the-server:6006
 
 
 def make_split_envs(run_config):
+    use_synthesized = True if run_config.audio_clip_mode == 'synthesized' else False
     train_env, val_env, test_env = MfccFrozenlake.make_train_val_test_envs(
         run_config.env_name, num_mfcc=run_config.num_mfcc,
-        use_synthesized=run_config.audio_clip_mode)
+        use_synthesized=use_synthesized)
 
     logger.info('Train env has %d raw samples' % train_env.n_samples)
     logger.info('Val env has %d raw samples' % val_env.n_samples)
@@ -51,7 +52,7 @@ def train_frozenlake_aqn(run_name):
     aqn_model.run(exp_schedule, lr_schedule)
 
 
-def test_frozenlake_aqn(restore_run_name, env_to_test='test'):
+def test_frozenlake_aqn(restore_run_name, env_to_test):
     assert env_to_test in ('train', 'val', 'test')
     run_config = config(restore_run_name)
 
@@ -63,4 +64,4 @@ def test_frozenlake_aqn(restore_run_name, env_to_test='test'):
     # Restore weights from latest checkpoint
     aqn_model.restore()
 
-    aqn_model.evaluate(envs[env_to_test], num_episodes=5, max_episode_steps=10)
+    aqn_model.evaluate(envs[env_to_test], num_episodes=100, max_episode_steps=100)

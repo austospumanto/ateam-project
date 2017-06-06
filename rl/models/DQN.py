@@ -337,11 +337,11 @@ class DQN(QN):
 
         # We load meta graph and restore weights
         self.logger.info('Loading model meta information from "%s"' % latest_model_meta_path)
-        self.sess = tf.Session()
         self.saver = tf.train.import_meta_graph(latest_model_meta_path)
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_weights_dir))
-        self.sess.run(tf.global_variables_initializer())
-
+        # self.build()
+        # self.sess.run(tf.global_variables_initializer())
+        # self.sess.run(self.update_target_op)
 
     def get_best_action(self, state):
         """

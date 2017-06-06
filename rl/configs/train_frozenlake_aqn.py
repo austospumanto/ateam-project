@@ -69,11 +69,11 @@ class config(object):
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 128
-        self.n_hidden_fc        = 64
+        self.n_hidden_rnn       = 77
+        self.n_hidden_fc        = 33
         self.n_layers_rnn         = 1
 
         # For the MfccFrozenLake environment
-        self.audio_clip_mode = 'standard'  # oneof('standard', 'synthesized')
+        self.audio_clip_mode = 'synthesized'  # oneof('standard', 'synthesized')
         if 'synth' in run_name:
             self.audio_clip_mode = 'synthesized'
