@@ -205,6 +205,7 @@ class AQN(DQN):
         if not hasattr(self, 'sess'):
             self.sess = tf.Session()
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_weights_dir))
+        self.logger.info([v.name for v in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)])
         self.build()
         # self.sess.run(tf.global_variables_initializer())
         # self.sess.run(self.update_target_op)

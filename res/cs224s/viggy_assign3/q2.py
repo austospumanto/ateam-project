@@ -82,7 +82,6 @@ class CTCModel():
         self.targets_placeholder = targets_placeholder
         self.seq_lens_placeholder = seq_lens_placeholder
 
-
     def create_feed_dict(self, inputs_batch, targets_batch, seq_lens_batch):
         """Creates the feed_dict for the digit recognizer.
 
@@ -259,7 +258,6 @@ class CTCModel():
         self.add_training_op()
         self.add_decoder_and_wer_op()
         self.add_summary_op()
-
 
     def train_on_batch(self, session, train_inputs_batch, train_targets_batch, train_seq_len_batch, train=True):
         feed = self.create_feed_dict(train_inputs_batch, train_targets_batch, train_seq_len_batch)

@@ -7,6 +7,9 @@ from six.moves import xrange as range
 import numpy as np
 import tensorflow as tf
 import cPickle as pickle
+from data.tidigits import tidigits_db
+import logging
+logger = logging.getLogger(__name__)
 
 
 def sparse_tuple_from(sequences, dtype=np.int32):
@@ -22,7 +25,6 @@ def sparse_tuple_from(sequences, dtype=np.int32):
     for n, seq in enumerate(sequences):
         indices.extend(zip([n] * len(seq), range(len(seq))))
         values.extend(seq)
-
     indices = np.asarray(indices, dtype=np.int64)
     values = np.asarray(values, dtype=dtype)
     shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1] + 1], dtype=np.int64)
@@ -31,7 +33,7 @@ def sparse_tuple_from(sequences, dtype=np.int32):
 
 
 def label_from_sparse_tensor(sparse_tensor):
-    inv_index_mapping = {v: k for k, v in get_tidigits_to_index_mapping().items()}
+    inv_index_mapping = {v: k for k, v in tidigits_db.index_mapping.items()}
     dense_tensor = tf.sparse_tensor_to_dense(sparse_tensor, default_value=-1).eval()
     label = "".join([inv_index_mapping[ch] for ch in dense_tensor[0] if ch != -1])
     label = label.replace('z', '0')
@@ -101,12 +103,8 @@ def pad_sequences(sequences, maxlen=None, dtype=np.float32,
     return x, lengths
 
 
-def get_tidigits_to_index_mapping():
-    return {"z": 0, "o": 10, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "_": 11}
-
-
 def compare_predicted_to_true(preds, trues_tup):
-    inv_index_mapping = {v: k for k, v in get_tidigits_to_index_mapping().items()}
+    inv_index_mapping = {v: k for k, v in tidigits_db.index_mapping.items()}
 
     preds = tf.sparse_tensor_to_dense(preds, default_value=-1).eval()
     trues = tf.sparse_tensor_to_dense(tf.SparseTensor(indices=trues_tup[0], values=trues_tup[1], dense_shape=trues_tup[2]), default_value=-1).eval()
@@ -115,7 +113,7 @@ def compare_predicted_to_true(preds, trues_tup):
         predicted_label = "".join([inv_index_mapping[ch] for ch in pred if ch != -1])
         true_label = "".join([inv_index_mapping[ch] for ch in true if ch != -1])
 
-        print("Predicted: {}\n   Actual: {}\n".format(predicted_label, true_label))
+        logger.info("Predicted: {}\n   Actual: {}\n".format(predicted_label, true_label))
 
 
 def load_dataset(dataset_path):
@@ -124,7 +122,7 @@ def load_dataset(dataset_path):
     return dataset
 
 
-def make_batches(dataset, batch_size=16):
+def make_batches(dataset, batch_size):
     examples = []
     sequences = []
     seqlens = []
@@ -132,8 +130,12 @@ def make_batches(dataset, batch_size=16):
     l1, l2, l3 = dataset
 
     for i in range(0, len(l1), batch_size):
-        examples.append(l1[i:i + batch_size])
-        sequences.append(sparse_tuple_from(l2[i:i + batch_size]))
-        seqlens.append(l3[i:i + batch_size])
+        examples_batch = l1[i:i + batch_size]
+        labels_batch = sparse_tuple_from(l2[i:i + batch_size])
+        seqlens_batch = l3[i:i + batch_size]
+
+        examples.append(examples_batch)
+        sequences.append(labels_batch)
+        seqlens.append(seqlens_batch)
 
     return examples, sequences, seqlens
