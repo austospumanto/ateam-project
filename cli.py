@@ -20,7 +20,8 @@ import fire
 
 from rl import Q
 from data.tidigits import tidigits_db
-from rl import commands
+from rl import commands as rl_commands
+from speech import commands as speech_commands
 from envs.lake_envs import *
 
 
@@ -48,10 +49,19 @@ class Ateam(object):
         Q.test_with_asr()
 
     def train_aqn(self, run_name):
-        commands.train_frozenlake_aqn(run_name)
+        rl_commands.train_frozenlake_aqn(run_name)
 
     def test_aqn(self, run_name, env_to_test='test'):
-        commands.test_frozenlake_aqn(run_name, env_to_test)
+        rl_commands.test_frozenlake_aqn(run_name, env_to_test)
+
+    def train_ctc(self, run_name):
+        speech_commands.train_ctcmodel(run_name)
+
+    def transfer_train_ctc(self, ctc_run_name, other_run_name):
+        speech_commands.transfer_train_ctcmodel(ctc_run_name, other_run_name)
+
+    def resume_train_ctc(self, run_name):
+        speech_commands.resume_train_ctcmodel(run_name)
 
 
 

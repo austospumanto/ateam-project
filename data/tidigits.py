@@ -17,6 +17,8 @@ class TidigitsDatabase(object):
     RELATIVE_TIDIGITS_PATH = 'data/LDC93S10_TIDIGITS/%s/tidigits'
     CDS = ['CD4_1_1', 'CD4_2_1', 'CD4_3_1']
     index_mapping = {"z": 0, "o": 10, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "_": 11}
+
+    # For retrieving digit samples used in FrozenLake
     fl_digits_query_template = \
         'select * from tidigits where \
          %s \
@@ -30,6 +32,11 @@ class TidigitsDatabase(object):
     fl_digits_query_args = ('z', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                             'zz', 'z1', 'z2', 'z3', 'z4', 'z5', 'z6', 'z7', 'z8', 'z9',
                             '1z', '11', '12', '13', '14', '15')
+
+    # For retrieving all digit samples
+    all_digits_query_template = 'select * from tidigits %s;'
+    all_digits_query_args = tuple()
+
     create_table_query = \
         'create table tidigits (\
          id integer primary key,\
@@ -70,6 +77,37 @@ class TidigitsDatabase(object):
         return self.fetchall((
             fl_digits_query,
             self.fl_digits_query_args
+        ))
+
+    def fetch_non_fl_digits(self, usage=None):
+        template_filler = ""
+        if usage == 'test':
+            template_filler = "usage = 'test' and "
+        elif usage == 'train':
+            template_filler = "usage = 'train' and "
+        fl_digits_query = self.fl_digits_query_template % template_filler
+        fl_digits_rows = self.fetchall((
+            fl_digits_query,
+            self.fl_digits_query_args
+        ))
+        fl_digits_ids = set([r['id'] for r in fl_digits_rows])
+        all_digits_rows = self.fetch_all_digits(usage)
+        non_fl_digits_rows = [r for r in all_digits_rows if r['id'] not in fl_digits_ids]
+        assert len(non_fl_digits_rows) + len(fl_digits_rows) == len(all_digits_rows)
+        assert len(non_fl_digits_rows) < len(all_digits_rows)
+        return non_fl_digits_rows
+
+
+    def fetch_all_digits(self, usage=None):
+        template_filler = ""
+        if usage == 'test':
+            template_filler = "where usage = 'test'"
+        elif usage == 'train':
+            template_filler = "where usage = 'train'"
+        fl_digits_query = self.all_digits_query_template % template_filler
+        return self.fetchall((
+            fl_digits_query,
+            self.all_digits_query_args
         ))
 
     def get_digits_audio_sample_row_by_id(self, sample_id):
@@ -136,23 +174,40 @@ class TidigitsDatabase(object):
         logger.info('Done with TidigitsDatabase.process_data(sequence_len=%r). %d inserted' % (sequence_len, num_inserted))
 
     def get_split_fl_dataset(self):
-        all_rows = self.fetch_fl_digits(usage=None)
+        return self.get_split_dataset(self.fetch_fl_digits, split_by='digits')
+
+    def get_split_non_fl_dataset(self):
+        return self.get_split_dataset(self.fetch_non_fl_digits, split_by='speaker_type')
+
+    def get_split_all_dataset(self):
+        return self.get_split_dataset(self.fetch_all_digits, split_by='speaker_type')
+
+    @classmethod
+    def filter_out_oh_digits(cls, rows):
+        return [row for row in rows if 'o' not in row['digits']]
+
+    @classmethod
+    def get_split_dataset(cls, fetch_digits_fxn, split_by):
+        all_rows = fetch_digits_fxn(usage=None)
+        all_rows = cls.filter_out_oh_digits(all_rows)
         total_num_fl_samples = len(all_rows)
 
         # Part 1 - fetch test_ids directly from database (where usage = 'test')
-        test_rows = self.fetch_fl_digits(usage='test')
+        test_rows = fetch_digits_fxn(usage='test')
+        test_rows = cls.filter_out_oh_digits(test_rows)
         test_ids = [int(row['id']) for row in test_rows]
         logger.info('Num usage=\'test\' rows: %d' % len(test_rows))
 
         # Part 2a - get all non-test data from database (where usage = 'train')
-        train_rows = self.fetch_fl_digits(usage='train')
+        train_rows = fetch_digits_fxn(usage='train')
+        train_rows = cls.filter_out_oh_digits(train_rows)
         train_rows.sort(key=lambda r: r['id'])
         logger.info('Num usage=\'train\' rows: %d' % len(train_rows))
 
-        logger.info('Frozenlake digits "classes" collected: %r' % list(set((r['digits'] for r in train_rows))))
+        logger.info('Digits "classes" collected: %r' % list(set((r['digits'] for r in train_rows))))
 
         # Part 2b - split non-test data into train and val splits, based on speaker_type
-        speaker_info = [row['digits'] for row in train_rows]
+        speaker_info = [row[split_by] for row in train_rows]
         sss = StratifiedShuffleSplit(n_splits=1, test_size=project_config.val_ratio, random_state=42)
         splits = sss.split(np.zeros(len(speaker_info)), speaker_info)
         train_indices, val_indices = map(list, list(splits)[0])  # Only one split
