@@ -185,6 +185,14 @@ class DQN(QN):
         # Get all trainable values in the graph for this scope
         scope_train_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
 
+        # Don't train the pretrained layers
+        if self.freeze_pretrained:
+            restore_var_names = [u'q/rnn/multi_rnn_cell/cell_0/gru_cell/gates/weights:0',
+                                 u'q/rnn/multi_rnn_cell/cell_0/gru_cell/gates/biases:0',
+                                 u'q/rnn/multi_rnn_cell/cell_0/gru_cell/candidate/weights:0',
+                                 u'q/rnn/multi_rnn_cell/cell_0/gru_cell/candidate/biases:0']
+            scope_train_vars = [var for var in scope_train_vars if var.name not in restore_var_names]
+
         # Compute gradients with respect to variables in scope for self.loss
         grads_and_vars = adam_opt.compute_gradients(self.loss, scope_train_vars)
 

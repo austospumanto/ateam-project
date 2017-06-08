@@ -66,7 +66,8 @@ def transfer_train_frozenlake_aqn(run_name, restore_run_name):
     envs = make_split_envs(run_config)
     exp_schedule = LinearExploration(envs['train'], run_config.eps_begin, run_config.eps_end, run_config.eps_nsteps)
     lr_schedule = LinearSchedule(run_config.lr_begin, run_config.lr_end, run_config.lr_nsteps)
-    aqn_model = AQN(run_config, envs=envs, mode='train')
+    aqn_model = AQN(run_config, envs=envs, mode='train',
+                    freeze_pretrained=run_config.freeze_pretrained)
     aqn_model.restore_from_ctc(restore_run_name)
     aqn_model.train(exp_schedule, lr_schedule)
 

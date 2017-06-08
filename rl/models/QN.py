@@ -13,7 +13,7 @@ class QN(object):
     """
     Abstract Class for implementing a Q Network
     """
-    def __init__(self, config, envs, logger=None, mode='train', sess=None):
+    def __init__(self, config, envs, logger=None, mode='train', sess=None, freeze_pretrained=False):
         """
         Initialize Q Network and env
 
@@ -23,6 +23,7 @@ class QN(object):
         """
         assert mode in ('train', 'test')
         self.mode = mode
+        self.freeze_pretrained = freeze_pretrained
 
         # directory for training outputs
         if mode == 'train' and not os.path.exists(config.output_path):

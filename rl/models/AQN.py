@@ -239,6 +239,7 @@ class AQN(DQN):
         self.logger.info('Pre-restore norms' + repr(pre_restore_norms))
         self.logger.info('Post-restore norms' + repr(post_restore_norms))
         assert all([pre_norm != post_norm for pre_norm, post_norm in zip(pre_restore_norms, post_restore_norms)])
+        self.initial_restored_var_norms = post_restore_norms
 
         # This is done in self.initialize() but we must do it again because we changed the weights
         self.sess.run(self.update_target_op)
@@ -280,6 +281,17 @@ class AQN(DQN):
         loss_eval, grad_norm_eval, summary, _ = self.sess.run(
             [self.loss, self.grad_norm, self.merged, self.train_op], feed_dict=fd
         )
+
+        if self.freeze_pretrained:
+            restore_var_names = [u'q/rnn/multi_rnn_cell/cell_0/gru_cell/gates/weights:0',
+                                 u'q/rnn/multi_rnn_cell/cell_0/gru_cell/gates/biases:0',
+                                 u'q/rnn/multi_rnn_cell/cell_0/gru_cell/candidate/weights:0',
+                                 u'q/rnn/multi_rnn_cell/cell_0/gru_cell/candidate/biases:0']
+            restore_var_norms = [
+                np.linalg.norm(self.sess.run(tf.get_default_graph().get_tensor_by_name(var_name)))
+                for var_name in restore_var_names
+            ]
+            assert restore_var_norms == self.initial_restored_var_norms
 
         # tensorboard stuff
         self.file_writer.add_summary(summary, t)

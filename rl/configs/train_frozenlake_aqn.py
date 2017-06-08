@@ -39,8 +39,8 @@ class config(object):
         self.project_cfg_dst_path = os.path.join('project_config.py')
 
         # model and training config
-        self.num_episodes_test = 30
-        self.max_steps_test    = 30
+        self.num_episodes_test = 5
+        self.max_steps_test    = 2
         self.grad_clip         = True
         self.clip_val          = 10
         self.saving_freq       = 2500
@@ -65,7 +65,7 @@ class config(object):
         self.eps_begin          = 1.0
         self.eps_end            = 0.05
         self.eps_nsteps         = 10000
-        self.learning_start     = 1000
+        self.learning_start     = 100
         self.l2_lambda          = 0
 
         # for mfcc derivation
@@ -75,7 +75,8 @@ class config(object):
         # for the Neural Net
         self.n_hidden_rnn       = 64
         self.n_hidden_fc        = 16
-        self.n_layers_rnn         = 1
+        self.n_layers_rnn       = 2
+        self.freeze_pretrained  = True
 
         # For the MfccFrozenLake environment
         self.audio_clip_mode = 'synthesized'  # oneof('standard', 'synthesized')
