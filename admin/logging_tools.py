@@ -1,6 +1,7 @@
 import logging
 import logging.config
 from logging import DEBUG, INFO, WARNING, ERROR
+import sys
 
 
 def setup_logging():
@@ -18,6 +19,7 @@ def setup_logging():
         'handlers': {
             'console': {
                 'class': 'logging.StreamHandler',
+                'stream': sys.stdout,
                 'level': project_config.LOG_LEVEL,
                 'formatter': 'simple'
             }
