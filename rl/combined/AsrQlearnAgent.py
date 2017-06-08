@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Config(object):
-    num_episodes = 15000
+    num_episodes = 1500
     gamma = 0.95
     lr = 0.15
     e = 1.0
