@@ -48,11 +48,15 @@ class Ateam(object):
     def test_with_asr(self):
         Q.test_with_asr()
 
+
+
     def train_aqn(self, run_name):
         rl_commands.train_frozenlake_aqn(run_name)
 
-    def test_aqn(self, run_name, env_to_test='test'):
-        rl_commands.test_frozenlake_aqn(run_name, env_to_test)
+    def test_aqn(self, run_name, env_to_test='test', demo=False, num_episodes=100):
+        rl_commands.test_frozenlake_aqn(run_name, env_to_test, demo, num_episodes)
+
+
 
     def train_ctc(self, run_name):
         speech_commands.train_ctcmodel(run_name)
@@ -62,6 +66,10 @@ class Ateam(object):
 
     def resume_train_ctc(self, run_name):
         speech_commands.resume_train_ctcmodel(run_name)
+
+
+    def test_asr_qagent(self, restore_run_name, env_to_test='test', demo=False, train_with_asr=False, num_episodes=100):
+        rl_commands.test_asr_qagent(restore_run_name, env_to_test, demo, train_with_asr, num_episodes)
 
 
 

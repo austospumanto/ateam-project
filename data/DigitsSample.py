@@ -7,6 +7,8 @@ import itertools
 import numpy as np
 import python_speech_features as psf
 import scikits.audiolab
+import vlc
+import sys
 
 
 class SynthesizedDigitsSample(object):
@@ -14,6 +16,14 @@ class SynthesizedDigitsSample(object):
         self.samples = samples
         self.audio = np.concatenate(tuple(sample.audio for sample in samples))
         self._mfccs = {}
+
+    def play(self):
+        for sample in self.samples:
+            sample.play()
+
+    @property
+    def sequence_length(self):
+        return sum((samp.sequence_length for samp in self.samples))
 
     @property
     def digits(self):
@@ -40,6 +50,17 @@ class DigitsSample(object):
         self.row = tidigits_db.get_digits_audio_sample_row_by_id(sample_id)
         self.audio = self.raw_audio.read_frames(self.raw_audio.nframes)
         self._mfccs = {}
+
+    def play(self):
+        p = vlc.MediaPlayer(self.path)
+        p.play()
+        while p.get_state() != vlc.State.Ended:
+            import time
+            time.sleep(0.01)
+
+    @property
+    def sequence_length(self):
+        return len(self.audio)
 
     @property
     def id(self):
@@ -86,7 +107,7 @@ class DigitsSampleCollection(object):
         return len(self.digits_sample_ids)
 
     def get_samples(self, desired_digits=None, desired_length=2):
-        if desired_digits:
+        if desired_digits is not None:
             _clean_digits = clean_digits(desired_digits, desired_length)
             return self.digits_to_samples[_clean_digits]
         else:
@@ -111,7 +132,7 @@ class SynthesizedDigitsSampleCollection(object):
         return len(self.digits_sample_ids)
 
     def get_samples(self, desired_digits=None, desired_length=2):
-        if desired_digits:
+        if desired_digits is not None:
             _clean_digits = clean_digits(desired_digits, desired_length)
             return self.digits_to_samples[_clean_digits]
         else:

@@ -42,6 +42,15 @@ def label_from_sparse_tensor(sparse_tensor):
     return label
 
 
+def label_from_dense_tensor(dense_tensor):
+    inv_index_mapping = {v: k for k, v in tidigits_db.index_mapping.items()}
+    label = "".join([inv_index_mapping[ch] for ch in dense_tensor[0] if ch != -1])
+    label = label.replace('z', '0')
+    label = label.replace('_', '')
+    label = label.replace('o', '0')
+    return label
+
+
 def pad_sequences(sequences, maxlen=None, dtype=np.float32,
                   padding='post', truncating='post', value=0.):
     """Pads each sequence to the same length: the length of the longest
@@ -106,7 +115,6 @@ def pad_sequences(sequences, maxlen=None, dtype=np.float32,
 def compare_predicted_to_true(preds, trues_tup):
     inv_index_mapping = {v: k for k, v in tidigits_db.index_mapping.items()}
 
-    preds = tf.sparse_tensor_to_dense(preds, default_value=-1).eval()
     trues = tf.sparse_tensor_to_dense(tf.SparseTensor(indices=trues_tup[0], values=trues_tup[1], dense_shape=trues_tup[2]), default_value=-1).eval()
 
     for true, pred in zip(trues, preds):
@@ -114,6 +122,16 @@ def compare_predicted_to_true(preds, trues_tup):
         true_label = "".join([inv_index_mapping[ch] for ch in true if ch != -1])
 
         logger.info("Predicted: {}\n   Actual: {}\n".format(predicted_label, true_label))
+
+
+def ctc_preds_to_labels(preds):
+    inv_index_mapping = {v: k for k, v in tidigits_db.index_mapping.items()}
+    preds = tf.sparse_tensor_to_dense(preds, default_value=-1).eval()
+    pred_labels = [
+        "".join([inv_index_mapping[ch] for ch in pred if ch != -1])
+        for pred in preds
+    ]
+    return pred_labels
 
 
 def load_dataset(dataset_path):

@@ -266,7 +266,7 @@ class QN(object):
 
         return loss_eval, grad_eval
 
-    def evaluate(self, env=None, num_episodes=None, max_episode_steps=None):
+    def evaluate(self, env=None, num_episodes=None, max_episode_steps=None, demo=False):
         """
         Evaluation with same procedure as the training
         """
@@ -295,9 +295,6 @@ class QN(object):
             a_to_d = ['left', 'down', 'right', 'up']
             steps_taken = 0
             while True and steps_taken < max_episode_steps:
-                if self.config.render_test:
-                    env.render()
-
                 if info or steps_taken == 0:
                     actual_state = 0 if steps_taken == 0 else info['state']
                     policy_s = a_to_d[int(self.policy(state))]

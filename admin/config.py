@@ -12,6 +12,7 @@ class ProjectConfig(object):
         self.rl_dir = os.path.join(self.base_dir, 'rl')
         self.models_dir = os.path.join(self.rl_dir, 'models')
         self.saved_runs_dir = os.path.join(self.base_dir, 'saved-runs')
+        self.speech_results_dir = os.path.join(self.base_dir, 'speech', 'results')
         self.val_ratio = 0.2
 
         # Tensorflow

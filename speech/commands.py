@@ -67,7 +67,6 @@ def train_ctcmodel(run_name):
                     cur_batch_size = len(train_seqlens_minibatches[mb_idx])
 
                     batch_cost, batch_ler, summary = ctc_model.train_on_batch(
-                        session,
                         train_feature_minibatches[mb_idx],
                         train_labels_minibatches[mb_idx],
                         train_seqlens_minibatches[mb_idx],
@@ -82,7 +81,6 @@ def train_ctcmodel(run_name):
                 train_wer = total_train_wer / num_examples
 
                 val_batch_cost, val_batch_ler, _ = ctc_model.train_on_batch(
-                    session,
                     val_feature_minibatches[0],
                     val_labels_minibatches[0],
                     val_seqlens_minibatches[0],
@@ -97,8 +95,7 @@ def train_ctcmodel(run_name):
                 if run_config.log_every is not None and \
                    (curr_epoch + 1) % run_config.log_every == 0:
                     batch_ii = random.randint(0, len(train_feature_minibatches) - 1)
-                    ctc_model.print_results(session,
-                                            train_feature_minibatches[batch_ii],
+                    ctc_model.print_results(train_feature_minibatches[batch_ii],
                                             train_labels_minibatches[batch_ii],
                                             train_seqlens_minibatches[batch_ii])
 
@@ -204,7 +201,6 @@ def resume_train_ctcmodel(run_name):
                     cur_batch_size = len(train_seqlens_minibatches[mb_idx])
 
                     batch_cost, batch_ler, summary = ctc_model.train_on_batch(
-                        session,
                         train_feature_minibatches[mb_idx],
                         train_labels_minibatches[mb_idx],
                         train_seqlens_minibatches[mb_idx],
@@ -219,7 +215,6 @@ def resume_train_ctcmodel(run_name):
                 train_wer = total_train_wer / num_examples
 
                 val_batch_cost, val_batch_ler, _ = ctc_model.train_on_batch(
-                    session,
                     val_feature_minibatches[0],
                     val_labels_minibatches[0],
                     val_seqlens_minibatches[0],
@@ -234,8 +229,7 @@ def resume_train_ctcmodel(run_name):
                 if run_config.log_every is not None and \
                    (curr_epoch + 1) % run_config.log_every == 0:
                     batch_ii = random.randint(0, len(train_feature_minibatches) - 1)
-                    ctc_model.print_results(session,
-                                            train_feature_minibatches[batch_ii],
+                    ctc_model.print_results(train_feature_minibatches[batch_ii],
                                             train_labels_minibatches[batch_ii],
                                             train_seqlens_minibatches[batch_ii])
 
@@ -338,7 +332,6 @@ def transfer_train_ctcmodel(ctc_run_name, restore_run_name):
                     cur_batch_size = len(train_seqlens_minibatches[mb_idx])
 
                     batch_cost, batch_ler, summary = ctc_model.train_on_batch(
-                        session,
                         train_feature_minibatches[mb_idx],
                         train_labels_minibatches[mb_idx],
                         train_seqlens_minibatches[mb_idx],
@@ -353,7 +346,6 @@ def transfer_train_ctcmodel(ctc_run_name, restore_run_name):
                 train_wer = total_train_wer / num_examples
 
                 val_batch_cost, val_batch_ler, _ = ctc_model.train_on_batch(
-                    session,
                     val_feature_minibatches[0],
                     val_labels_minibatches[0],
                     val_seqlens_minibatches[0],
@@ -368,8 +360,7 @@ def transfer_train_ctcmodel(ctc_run_name, restore_run_name):
                 if run_config.log_every is not None and \
                    (curr_epoch + 1) % run_config.log_every == 0:
                     batch_ii = 0
-                    ctc_model.print_results(session,
-                                            train_feature_minibatches[batch_ii],
+                    ctc_model.print_results(train_feature_minibatches[batch_ii],
                                             train_labels_minibatches[batch_ii],
                                             train_seqlens_minibatches[batch_ii])
 
