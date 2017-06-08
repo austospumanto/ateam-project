@@ -67,7 +67,7 @@ def test_frozenlake_aqn(restore_run_name, env_to_test, demo, num_episodes):
     aqn_model.restore()
     aqn_model.evaluate(envs[env_to_test],
                        num_episodes=num_episodes,
-                       max_episode_steps=300, demo=demo)
+                       max_episode_steps=300)
 
 
 def test_asr_qagent(restore_run_name, name_env_to_eval, demo=False, train_with_asr=False, num_episodes=100):
