@@ -266,7 +266,7 @@ class QN(object):
 
         return loss_eval, grad_eval
 
-    def evaluate(self, env=None, num_episodes=None, max_episode_steps=None, demo=False):
+    def evaluate(self, env=None, num_episodes=None, max_episode_steps=None):
         """
         Evaluation with same procedure as the training
         """
