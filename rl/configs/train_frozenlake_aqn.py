@@ -5,7 +5,7 @@ from admin.config import project_config
 
 
 class config(object):
-    def __init__(self, run_name):
+    def __init__(self, run_name, restore_run_name=None):
         # env config
         self.render_train     = False
         self.render_test      = False
@@ -16,7 +16,11 @@ class config(object):
 
         # output config
         self.run_name = run_name
-        self.run_dir = '%s-%s' % (datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), run_name)
+        self.restore_run_name = restore_run_name
+        self.combined_name = run_name
+        if restore_run_name:
+            self.combined_name += '--transfer--' + restore_run_name
+        self.run_dir = '%s-%s' % (datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), self.combined_name)
         self.output_path  = os.path.join(
             project_config.base_dir, 'results', self.run_dir
         )
@@ -41,18 +45,18 @@ class config(object):
         self.clip_val          = 10
         self.saving_freq       = 2500
         self.log_freq          = 100
-        self.eval_freq         = 1000
+        self.eval_freq         = 2000
         self.record_freq       = 1000
         self.soft_epsilon      = 0.00  # Set this to 0 so no random actions during testing
         self.clip_q            = False
 
         # nature paper hyper params
         self.nsteps_train       = 1000000
-        self.batch_size         = 99
+        self.batch_size         = 64
         self.buffer_size        = 10000
         self.target_update_freq = 25
         self.gamma              = 0.95
-        self.learning_freq      = 4
+        self.learning_freq      = 1
         self.state_history      = 1
         self.skip_frame         = 1
         self.lr_begin           = 0.00025
@@ -62,15 +66,15 @@ class config(object):
         self.eps_end            = 0.05
         self.eps_nsteps         = 10000
         self.learning_start     = 1000
-        self.l2_lambda          = 1e-12
+        self.l2_lambda          = 0
 
         # for mfcc derivation
         self.num_mfcc           = 13
         self.num_digits         = 11  # 11 (TIDIGITS - 0-9 + oh) + 1 (blank) = 12
 
         # for the Neural Net
-        self.n_hidden_rnn       = 67
-        self.n_hidden_fc        = 33
+        self.n_hidden_rnn       = 64
+        self.n_hidden_fc        = 16
         self.n_layers_rnn         = 1
 
         # For the MfccFrozenLake environment

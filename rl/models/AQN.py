@@ -146,8 +146,6 @@ class AQN(DQN):
                 reuse=reuse,
                 weights_initializer=layers.variance_scaling_initializer()
             )
-        # if self.config.clip_q:
-        #     logits = tf.clip_by_value(logits, 0.0, 1.0)
         ##############################################################
         ######################## END YOUR CODE #######################
         return logits
@@ -207,8 +205,43 @@ class AQN(DQN):
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_weights_dir))
         self.logger.info([v.name for v in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)])
         self.build()
-        # self.sess.run(tf.global_variables_initializer())
-        # self.sess.run(self.update_target_op)
+
+    def restore_from_ctc(self, restore_run_name):
+        # Initialize the vars here so we can write over them
+        self.initialize()
+
+        # Write over the GRU cell variables with the values from the trained CTC Model
+        saved_run_dir = os.path.join(project_config.speech_results_dir, restore_run_name)
+        model_weights_dir = os.path.join(saved_run_dir, 'model.weights')
+        assert os.path.exists(model_weights_dir)
+
+        restore_var_names = [u'q/rnn/multi_rnn_cell/cell_0/gru_cell/gates/weights:0',
+                             u'q/rnn/multi_rnn_cell/cell_0/gru_cell/gates/biases:0',
+                             u'q/rnn/multi_rnn_cell/cell_0/gru_cell/candidate/weights:0',
+                             u'q/rnn/multi_rnn_cell/cell_0/gru_cell/candidate/biases:0']
+
+        pre_restore_norms = [
+            np.linalg.norm(self.sess.run(tf.get_default_graph().get_tensor_by_name(var_name)))
+            for var_name in restore_var_names
+        ]
+
+        # Restore all GRU vars from CTCModel to the AQN
+        aqn_vars_to_restore = [tf.get_default_graph().get_tensor_by_name(vn) for vn in restore_var_names]
+        saver = tf.train.Saver(aqn_vars_to_restore)
+        saver.restore(self.sess, tf.train.latest_checkpoint(model_weights_dir))
+
+        # Check to make sure the restored variables were not written over during
+        # initialization of other vars
+        post_restore_norms = [
+            np.linalg.norm(self.sess.run(tf.get_default_graph().get_tensor_by_name(var_name)))
+            for var_name in restore_var_names
+        ]
+        self.logger.info('Pre-restore norms' + repr(pre_restore_norms))
+        self.logger.info('Post-restore norms' + repr(post_restore_norms))
+        assert all([pre_norm != post_norm for pre_norm, post_norm in zip(pre_restore_norms, post_restore_norms)])
+
+        # This is done in self.initialize() but we must do it again because we changed the weights
+        self.sess.run(self.update_target_op)
 
     def update_step(self, t, replay_buffer, lr):
         """
