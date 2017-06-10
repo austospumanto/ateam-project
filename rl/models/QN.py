@@ -299,7 +299,8 @@ class QN(object):
                 if info or steps_taken == 0:
                     actual_state = 0 if steps_taken == 0 else info['state']
                     policy_s = a_to_d[int(self.policy(state))]
-                    self.logger.info('steps_taken=%d   state=%d   policy=%s' % (steps_taken, actual_state, policy_s))
+                    if self.mode != 'test':
+                        self.logger.info('steps_taken=%d   state=%d   policy=%s' % (steps_taken, actual_state, policy_s))
 
                 # store last state in buffer
                 idx     = replay_buffer.store_audio(state)
@@ -308,6 +309,8 @@ class QN(object):
                 action = self.get_action(q_input)
 
                 # perform action in env
+                if self.mode == 'test':
+                    print '...AQN done listening. Choosing to move "%s"...' % policy_s.capitalize()
                 new_state, reward, done, info = env.step(action)
 
                 # store in replay memory
@@ -319,7 +322,13 @@ class QN(object):
                 total_reward += reward
                 if done:
                     wl = 'WIN' if reward > 0 else 'LOSS'
-                    self.logger.info('steps_taken=%d %s' % (steps_taken, wl))
+                    if self.mode == 'test':
+                        if wl == 'WIN':
+                            print '...AQN reached the goal state in %d steps...\n\n' % steps_taken
+                        elif wl == 'LOSS':
+                            print '...AQN fell into a hole in %d steps...\n\n' % steps_taken
+                    else:
+                        self.logger.info('steps_taken=%d %s' % (steps_taken, wl))
                     break
 
             # updates to perform at the end of an episode

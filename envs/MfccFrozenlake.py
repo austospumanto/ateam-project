@@ -43,6 +43,7 @@ class MfccFrozenlake(gym.Wrapper):
         digits_sample = self.digits_sample_collection.choose_random_sample(state)
         if self.demo:
             self.render()
+            print '...AQN listening to audio for state "%d"...' % int(state)
             digits_sample.play()
         return digits_sample.to_mfccs(self.num_mfcc)
 
